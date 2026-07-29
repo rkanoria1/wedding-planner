@@ -196,7 +196,7 @@ export function TaskList({
                   <span
                     className={cn(
                       "size-2 shrink-0 rounded-full",
-                      task.status === "completed" ? "bg-emerald-500" : "bg-muted-foreground/40"
+                      task.status === "completed" ? "bg-primary" : "bg-muted-foreground/40"
                     )}
                   />
                   <span
@@ -306,7 +306,7 @@ export function TaskCalendar({
                     className={cn(
                       "block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] transition-colors",
                       t.status === "completed"
-                        ? "bg-emerald-500/15 text-emerald-700 line-through dark:text-emerald-300"
+                        ? "bg-primary/15 text-primary line-through dark:text-primary"
                         : "bg-muted hover:bg-accent"
                     )}
                   >

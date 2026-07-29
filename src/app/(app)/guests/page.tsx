@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 
 const RSVP_META: Record<RsvpStatus, { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-muted text-muted-foreground border-border" },
-  confirmed: { label: "Confirmed", className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  confirmed: { label: "Confirmed", className: "bg-primary/10 text-primary dark:text-primary border-primary/30" },
   declined: { label: "Declined", className: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30" },
   maybe: { label: "Maybe", className: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-500/30" },
 };
@@ -254,7 +254,7 @@ function GuestsPageInner() {
                       onClick={() => isAdmin && toggleInvite(g)}
                       className={cn(
                         "inline-flex items-center gap-1 text-xs",
-                        g.invitation_sent ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"
+                        g.invitation_sent ? "text-primary dark:text-primary" : "text-muted-foreground"
                       )}
                     >
                       {g.invitation_sent ? <MailCheck className="size-4" /> : <Mail className="size-4" />}
@@ -267,7 +267,7 @@ function GuestsPageInner() {
                       <a
                         href={whatsappLink(g.phone)}
                         target="_blank" rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:underline dark:text-emerald-300"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline dark:text-primary"
                       >
                         <MessageCircle className="size-3.5" /> WhatsApp
                       </a>

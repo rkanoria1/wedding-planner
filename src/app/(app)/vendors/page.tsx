@@ -187,7 +187,7 @@ function VendorsPageInner() {
                         <Badge variant="outline" className="mt-1">{v.category}</Badge>
                       </div>
                       {v.booked ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:text-primary">
                           <BadgeCheck className="size-3.5" /> Booked
                         </span>
                       ) : (
@@ -206,7 +206,7 @@ function VendorsPageInner() {
                       </div>
                       <div>
                         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Advance</p>
-                        <p className="text-sm font-medium tabular-nums text-emerald-700 dark:text-emerald-300">
+                        <p className="text-sm font-medium tabular-nums text-primary dark:text-primary">
                           {formatMoney(Number(v.advance_paid), currency)}
                         </p>
                       </div>
@@ -235,7 +235,7 @@ function VendorsPageInner() {
                           <a
                             href={whatsappLink(v.phone, `Hi! Regarding the wedding on 15 Jan 2027 —`)}
                             target="_blank" rel="noreferrer"
-                            className="inline-flex size-8 items-center justify-center rounded-full border text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"
+                            className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
                             aria-label="WhatsApp"
                           >
                             <MessageCircle className="size-3.5" />

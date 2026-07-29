@@ -55,7 +55,7 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
           {event && (
             <span
               className="size-2 shrink-0 rounded-full"
-              style={{ background: EVENT_THEMES[event.theme]?.chip ?? "#0c7a5a" }}
+              style={{ background: EVENT_THEMES[event.theme]?.chip ?? "#7b1e3b" }}
               title={event.name}
             />
           )}

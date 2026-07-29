@@ -239,7 +239,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                         aria-label={item.purchased ? "Mark pending" : "Mark purchased"}
                       >
                         {item.purchased ? (
-                          <CheckCircle2 className="size-5 text-emerald-600" />
+                          <CheckCircle2 className="size-5 text-primary" />
                         ) : (
                           <Circle className="size-5 text-muted-foreground/50" />
                         )}

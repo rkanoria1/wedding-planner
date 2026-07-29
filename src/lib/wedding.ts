@@ -45,8 +45,8 @@ export const URGENCY_META: Record<
   },
   can_wait: {
     label: "Can wait",
-    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-    dot: "bg-emerald-500",
+    className: "bg-primary/10 text-primary dark:text-primary border-primary/30",
+    dot: "bg-primary",
   },
   none: {
     label: "No due date",
@@ -79,7 +79,7 @@ export const STATUS_META: Record<TaskStatus, { label: string; className: string 
   in_progress: { label: "In Progress", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30" },
   waiting: { label: "Waiting", className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30" },
   blocked: { label: "Blocked", className: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30" },
-  completed: { label: "Completed", className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  completed: { label: "Completed", className: "bg-primary/10 text-primary dark:text-primary border-primary/30" },
   cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground/70 border-border line-through" },
 };
 
@@ -96,15 +96,15 @@ export const PRIORITY_META: Record<TaskPriority, { label: string; className: str
   critical: { label: "Critical", className: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30", rank: 0 },
   high: { label: "High", className: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30", rank: 1 },
   medium: { label: "Medium", className: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-500/30", rank: 2 },
-  low: { label: "Low", className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30", rank: 3 },
+  low: { label: "Low", className: "bg-primary/10 text-primary dark:text-primary border-primary/30", rank: 3 },
 };
 
 /* ————— event themes ————— */
 
 export const EVENT_THEMES: Record<EventTheme, { label: string; gradient: string; chip: string }> = {
-  henna: { label: "Henna Green", gradient: "bg-event-henna", chip: "#3f7d3a" },
+  henna: { label: "Henna", gradient: "bg-event-henna", chip: "#a15a3a" },
   marigold: { label: "Marigold", gradient: "bg-event-marigold", chip: "#e59312" },
-  emerald: { label: "Emerald & Gold", gradient: "bg-event-emerald", chip: "#0c7a5a" },
+  emerald: { label: "Burgundy & Gold", gradient: "bg-event-emerald", chip: "#7b1e3b" },
   champagne: { label: "Champagne", gradient: "bg-event-champagne", chip: "#c2a061" },
   rose: { label: "Rose", gradient: "bg-event-rose", chip: "#c94f7c" },
   sapphire: { label: "Sapphire", gradient: "bg-event-sapphire", chip: "#2f5fb3" },
@@ -187,7 +187,7 @@ export function whatsappLink(phone: string, message?: string): string {
 
 export async function fireConfetti(big = false) {
   const confetti = (await import("canvas-confetti")).default;
-  const colors = ["#0c7a5a", "#c9a227", "#f5e6c4", "#3f7d3a", "#e5b912"];
+  const colors = ["#7b1e3b", "#c9a227", "#f5e6c4", "#b8496a", "#e5b912"];
   confetti({
     particleCount: big ? 180 : 80,
     spread: big ? 100 : 70,

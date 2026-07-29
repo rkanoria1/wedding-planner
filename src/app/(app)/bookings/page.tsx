@@ -76,7 +76,7 @@ function BookingsPageInner() {
 
   const statTiles = [
     { label: "Bookings needed", value: stats.total, icon: ClipboardList, tint: "text-primary", bg: "bg-primary/10" },
-    { label: "Confirmed", value: stats.confirmed, icon: BadgeCheck, tint: "text-emerald-600", bg: "bg-emerald-500/10" },
+    { label: "Confirmed", value: stats.confirmed, icon: BadgeCheck, tint: "text-primary", bg: "bg-primary/10" },
     { label: "Pending", value: stats.pending, icon: CalendarClock, tint: "text-amber-600", bg: "bg-amber-500/10" },
     { label: "Overdue", value: stats.overdue, icon: TriangleAlert, tint: "text-red-600", bg: "bg-red-500/10" },
   ];
@@ -129,7 +129,7 @@ function BookingsPageInner() {
             />
             <div className="space-y-1 text-sm">
               <p className="flex items-center gap-1.5">
-                <Wallet className="size-4 text-emerald-600" />
+                <Wallet className="size-4 text-primary" />
                 <span className="text-muted-foreground">Advances:</span>
                 <span className="font-medium">{formatMoney(stats.advancePaid, settings.currency)}</span>
               </p>
@@ -288,7 +288,7 @@ function BookingsPageInner() {
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-semibold">{b.vendor_name ?? b.category}</p>
                           {b.contract_signed && (
-                            <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
+                            <Badge variant="outline" className="gap-1 border-primary/30 text-primary dark:text-primary">
                               <FileSignature className="size-3" /> Signed
                             </Badge>
                           )}
@@ -315,7 +315,7 @@ function BookingsPageInner() {
                     <div className="flex shrink-0 items-center gap-4 text-sm">
                       <div className="text-right">
                         <p className="text-[11px] text-muted-foreground">Advance</p>
-                        <p className="font-medium tabular-nums text-emerald-700 dark:text-emerald-300">
+                        <p className="font-medium tabular-nums text-primary dark:text-primary">
                           {formatMoney(Number(b.advance_paid), settings.currency)}
                         </p>
                       </div>
@@ -341,7 +341,7 @@ function BookingsPageInner() {
                           <a
                             href={whatsappLink(b.contact_phone, `Hi${b.contact_person ? ` ${b.contact_person}` : ""}! Regarding ${b.category} for our wedding —`)}
                             target="_blank" rel="noreferrer"
-                            className="inline-flex size-8 items-center justify-center rounded-full border text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"
+                            className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
                             aria-label="WhatsApp"
                           >
                             <MessageCircle className="size-3.5" />

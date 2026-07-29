@@ -43,7 +43,7 @@ export function StatusStepper({
                 "relative flex shrink-0 items-center justify-center rounded-full border-2 transition-all",
                 dot,
                 reached
-                  ? "border-emerald-500 bg-emerald-500 text-white"
+                  ? "border-primary bg-primary text-white"
                   : "border-border bg-card text-muted-foreground",
                 isCurrent && "ring-2 ring-gold ring-offset-1 ring-offset-background",
                 interactive && "cursor-pointer hover:scale-110"
@@ -59,7 +59,7 @@ export function StatusStepper({
               <span
                 className={cn(
                   "h-0.5 flex-1 rounded-full transition-colors",
-                  currentStep > meta.step ? "bg-emerald-500" : "bg-border"
+                  currentStep > meta.step ? "bg-primary" : "bg-border"
                 )}
               />
             )}

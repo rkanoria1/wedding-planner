@@ -226,7 +226,7 @@ export function MembersSection({ eventId }: { eventId: string }) {
             {isMember && p.phone && (
               <a
                 href={whatsappLink(p.phone)} target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600/10 px-2.5 py-1 text-xs text-emerald-700 hover:bg-emerald-600/20 dark:text-emerald-300"
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary hover:bg-primary/20 dark:text-primary"
               >
                 <MessageCircle className="size-3.5" /> WhatsApp
               </a>

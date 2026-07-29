@@ -497,7 +497,7 @@ export function BudgetSection({ eventId, openNew = false }: { eventId?: string |
                             onClick={() => togglePaid(e.id, !e.paid)}
                             className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
                               e.paid
-                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                ? "border-primary/30 bg-primary/10 text-primary dark:text-primary"
                                 : "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400"
                             }`}
                           >

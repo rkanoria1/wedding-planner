@@ -79,14 +79,14 @@ export const BOOKING_STATUS_META: Record<
   },
   booked: {
     label: "Booked",
-    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-    dot: "bg-emerald-500",
+    className: "bg-primary/10 text-primary dark:text-primary border-primary/30",
+    dot: "bg-primary",
     step: 3,
   },
   confirmed: {
     label: "Confirmed",
-    className: "bg-emerald-600/15 text-emerald-800 dark:text-emerald-200 border-emerald-600/40",
-    dot: "bg-emerald-600",
+    className: "bg-primary/15 text-primary dark:text-primary border-primary/40",
+    dot: "bg-primary",
     step: 4,
   },
   cancelled: {
@@ -109,8 +109,8 @@ export const BOOKING_URGENCY_META: Record<
   critical: { label: "Book now", ring: "#dc2626", text: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", dot: "bg-red-500" },
   urgent: { label: "Urgent", ring: "#ea580c", text: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10", dot: "bg-orange-500" },
   soon: { label: "Book soon", ring: "#ca8a04", text: "text-yellow-700 dark:text-yellow-300", bg: "bg-yellow-500/10", dot: "bg-yellow-500" },
-  on_track: { label: "On track", ring: "#16a34a", text: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-500/10", dot: "bg-emerald-500" },
-  done: { label: "Secured", ring: "#16a34a", text: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-500/10", dot: "bg-emerald-600" },
+  on_track: { label: "On track", ring: "#7b1e3b", text: "text-primary dark:text-primary", bg: "bg-primary/10", dot: "bg-primary" },
+  done: { label: "Secured", ring: "#7b1e3b", text: "text-primary dark:text-primary", bg: "bg-primary/10", dot: "bg-primary" },
 };
 
 /** Ideal "book by" date = wedding date minus the category's lead time. */
