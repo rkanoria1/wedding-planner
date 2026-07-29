@@ -1,0 +1,23 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { WeddingDataProvider } from "@/lib/data-context";
+import { AppShell } from "@/components/shell/app-shell";
+
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  return (
+    <WeddingDataProvider>
+      <AppShell>{children}</AppShell>
+    </WeddingDataProvider>
+  );
+}

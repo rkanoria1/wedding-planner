@@ -26,8 +26,8 @@ create table public.profiles (
 -- ---------- app settings (singleton) ----------
 create table public.app_settings (
   id int primary key default 1 check (id = 1),
-  couple_names text not null default 'Rahul & Partner',
-  wedding_date date not null default '2027-01-15',
+  couple_names text not null default 'Rahul & Somya',
+  wedding_date date not null default '2027-01-29',
   planning_start date not null default current_date,
   currency text not null default '₹'
 );

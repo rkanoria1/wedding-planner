@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wedding-planner",
+      "runtimeExecutable": "/Users/rahulkanoria/.nvm/versions/node/v22.22.1/bin/node",
+      "runtimeArgs": ["/Users/rahulkanoria/.nvm/versions/node/v22.22.1/bin/npm", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
