@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 /**
- * The whole family shares one account. Entering the access code signs in to
- * that single shared identity — the code is that account's password.
- * Create the account once (see supabase/setup-family-login.sql), using this
- * same email and your chosen code.
+ * Two family workspaces, each with its own access code. The single code field
+ * is tried against both family accounts — whichever matches signs that family
+ * in to their own private workspace. Create the accounts once via
+ * supabase/setup-family-login.sql.
  */
-const FAMILY_EMAIL =
-  process.env.NEXT_PUBLIC_FAMILY_EMAIL || "family@rahul-somya.app";
+const FAMILY_EMAILS = [
+  "rahul-family@rahul-somya.app",
+  "somya-family@rahul-somya.app",
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,12 +29,14 @@ export default function LoginPage() {
   async function handleAccess(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await db.auth.signInWithPassword({
-      email: FAMILY_EMAIL,
-      password: code,
-    });
+    // the code is a password shared by one family — try each family account
+    let ok = false;
+    for (const email of FAMILY_EMAILS) {
+      const { error } = await db.auth.signInWithPassword({ email, password: code });
+      if (!error) { ok = true; break; }
+    }
     setBusy(false);
-    if (error) {
+    if (!ok) {
       toast.error("That code doesn't match. Please try again.");
       return;
     }
@@ -53,7 +57,7 @@ export default function LoginPage() {
           }}
         />
         <div className="relative flex items-center gap-2 text-sm uppercase tracking-[0.3em] text-white/80">
-          <Gem className="size-4" /> Rahul&apos;s Wedding Planner
+          <Gem className="size-4" /> Rahul &amp; Somya · Wedding Planner
         </div>
         <motion.div
           initial={{ opacity: 0, y: 24 }}

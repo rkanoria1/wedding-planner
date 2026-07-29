@@ -54,3 +54,7 @@ insert into public.tasks (event_id, name, description, category, priority, statu
   (null, 'Arrange accommodation for outstation guests', 'Room block / hotel for guests travelling in.', 'Logistics', 'medium', 'not_started', '2026-11-30', 6),
   (null, 'Apply for marriage registration', 'Paperwork and appointment.', 'Legal', 'high', 'not_started', '2026-12-15', 7),
   (null, 'Plan honeymoon', 'Shortlist destinations and book flights.', 'Honeymoon', 'low', 'not_started', '2026-11-30', 8);
+
+-- assign this starter plan to Rahul's family (change to 'somya' if you'd
+-- rather it belong to Somya's family). Only fills rows that have no family yet.
+update public.tasks set household = 'rahul' where household is null;

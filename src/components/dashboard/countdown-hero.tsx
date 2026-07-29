@@ -34,11 +34,11 @@ function greeting() {
 }
 
 export function CountdownHero() {
-  const { me, settings, tasks } = useWedding();
+  const { settings, tasks, branding } = useWedding();
   const cd = useCountdown(settings.wedding_date + "T00:00:00");
   const progress = taskListProgress(tasks);
   const elapsed = planningElapsed(settings.planning_start, settings.wedding_date);
-  const firstName = me?.full_name.split(" ")[0] ?? "there";
+  const firstName = branding.greetingName || "there";
 
   const units = [
     { v: cd.days, l: "days" },
@@ -67,7 +67,7 @@ export function CountdownHero() {
             {greeting()}, <span className="font-medium text-foreground">{firstName}</span> ✨
           </p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
-            <span className="text-gradient-gold">{settings.couple_names}</span>
+            <span className="text-gradient-gold">{branding.coupleNames}</span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {formatDate(settings.wedding_date, "EEEE, d MMMM yyyy")} ·{" "}

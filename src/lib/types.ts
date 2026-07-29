@@ -11,6 +11,14 @@ export type RsvpStatus = "pending" | "confirmed" | "declined" | "maybe";
 export type GuestSide = "bride" | "groom" | "both";
 export type GuestGroup = "family" | "friends" | "vip";
 export type PaymentKind = "expense" | "advance" | "vendor_payment";
+
+export interface Household {
+  id: string;
+  app_title: string;
+  greeting_name: string;
+  couple_names: string;
+  sort_order: number;
+}
 export type BookingStatus =
   | "not_booked"
   | "enquired"
@@ -34,6 +42,7 @@ export interface Profile {
   role: UserRole;
   phone: string | null;
   avatar_url: string | null;
+  household: string | null;
   created_at: string;
 }
 

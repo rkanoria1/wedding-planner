@@ -32,7 +32,7 @@ const NAV = [
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { db, me, isAdmin, events, tasks, settings } = useWedding();
+  const { db, me, isAdmin, events, tasks, settings, branding } = useWedding();
 
   const activeEvents = events.filter((e) => !e.archived);
   const progress = taskListProgress(tasks);
@@ -56,7 +56,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Gem className="size-5" />
         </div>
         <div>
-          <p className="font-display text-lg leading-tight">Rahul&apos;s Wedding</p>
+          <p className="font-display text-lg leading-tight">{branding.appTitle}</p>
           <p className="text-[11px] uppercase tracking-[0.2em] text-sidebar-foreground/60">
             Planner
           </p>

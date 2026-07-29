@@ -21,6 +21,7 @@ import type {
   EventMember,
   Expense,
   Guest,
+  Household,
   Note,
   Notification,
   Performance,
@@ -40,6 +41,7 @@ interface WeddingData {
   isAdmin: boolean;
   loading: boolean;
   settings: AppSettings;
+  branding: { appTitle: string; greetingName: string; coupleNames: string; household: string | null };
   profiles: Profile[];
   events: WeddingEvent[];
   eventMembers: EventMember[];
@@ -216,6 +218,23 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     [profiles, user]
   );
 
+  // per-family branding (two workspaces share one wedding)
+  const [households, setHouseholds] = useState<Household[]>([]);
+  useEffect(() => {
+    if (!user) { setHouseholds([]); return; }
+    db.from("households").select("*").then(({ data }) => setHouseholds((data as Household[]) ?? []));
+  }, [db, user]);
+
+  const branding = useMemo(() => {
+    const h = households.find((x) => x.id === me?.household);
+    return {
+      appTitle: h?.app_title ?? "Rahul & Somya",
+      greetingName: h?.greeting_name ?? me?.full_name?.split(" ")[0] ?? "",
+      coupleNames: h?.couple_names ?? DEFAULT_SETTINGS.couple_names,
+      household: me?.household ?? null,
+    };
+  }, [households, me]);
+
   const logActivity = useCallback(
     async (action: string, entity: string, detail: string, entityId?: string) => {
       if (!user) return;
@@ -250,6 +269,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     isAdmin: me?.role === "admin",
     loading,
     settings: (rows.app_settings[0] as AppSettings) ?? DEFAULT_SETTINGS,
+    branding,
     profiles,
     events: rows.events as WeddingEvent[],
     eventMembers: rows.event_members as EventMember[],
