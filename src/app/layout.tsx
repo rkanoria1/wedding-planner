@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/providers";
@@ -19,8 +19,25 @@ const playfair = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Rahul's Wedding Planner",
-  description: "Plan every celebration — Mehendi to Walima — in one elegant place.",
+  title: "Rahul & Somya — Wedding Planner",
+  description: "Plan every celebration — Myrah to Phera — in one elegant place.",
+  applicationName: "R & S Wedding",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "R & S Wedding",
+  },
+  icons: {
+    icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#7b1e3b",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

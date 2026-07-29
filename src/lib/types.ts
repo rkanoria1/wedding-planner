@@ -160,8 +160,26 @@ export interface Guest {
   food_pref: string | null;
   phone: string | null;
   head_count: number;
+  invited_events: string[];
   notes: string | null;
   created_at: string;
+}
+
+export type PerformanceStatus = "planned" | "rehearsing" | "ready";
+
+export interface Performance {
+  id: string;
+  event_id: string | null;
+  title: string;
+  song: string | null;
+  performers: string | null;
+  rehearsal_date: string | null;
+  duration_min: number | null;
+  status: PerformanceStatus;
+  sort_order: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Notification {

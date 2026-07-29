@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3, CalendarCheck2, Gem, History, LayoutDashboard, ListChecks,
-  LogOut, Plus, Settings, ShoppingBag, Store, Users, Wallet,
+  LogOut, Music2, Plus, Settings, ShoppingBag, Store, Users, Wallet,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { daysRemaining, taskListProgress } from "@/lib/wedding";
@@ -22,8 +22,9 @@ const NAV = [
   { href: "/shopping", label: "Shopping", icon: ShoppingBag },
   { href: "/budget", label: "Budget", icon: Wallet },
   { href: "/guests", label: "Guests", icon: Users },
+  { href: "/performances", label: "Sangeet", icon: Music2 },
   { href: "/vendors", label: "Vendors", icon: Store },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/analytics", label: "Insights", icon: BarChart3 },
   { href: "/activity", label: "Activity", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

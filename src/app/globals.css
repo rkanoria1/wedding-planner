@@ -142,6 +142,13 @@
   html {
     @apply font-sans;
   }
+  /* Bigger, easier-to-read + easier-to-tap on phones (rem-based, so text,
+     padding and button heights all scale up together). */
+  @media (max-width: 640px) {
+    html {
+      font-size: 17.5px;
+    }
+  }
   h1, h2, h3 {
     letter-spacing: -0.01em;
   }

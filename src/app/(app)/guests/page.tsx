@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Guest, GuestGroup, GuestSide, RsvpStatus } from "@/lib/types";
-import { whatsappLink } from "@/lib/wedding";
+import { EVENT_THEMES, whatsappLink } from "@/lib/wedding";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,19 +37,23 @@ const RSVP_META: Record<RsvpStatus, { label: string; className: string }> = {
 const SIDE_LABEL: Record<GuestSide, string> = { bride: "Bride's side", groom: "Groom's side", both: "Both sides" };
 const GROUP_LABEL: Record<GuestGroup, string> = { family: "Family", friends: "Friends", vip: "VIP" };
 
+const FOOD_OPTIONS = ["Veg", "Non-veg", "Jain", "No onion-garlic", "Halal"];
+
 function GuestsPageInner() {
   const params = useSearchParams();
-  const { db, isAdmin, guests, refresh, logActivity } = useWedding();
+  const { db, isAdmin, guests, events, refresh, logActivity } = useWedding();
+  const activeEvents = useMemo(() => events.filter((e) => !e.archived), [events]);
 
   const [q, setQ] = useState("");
   const [side, setSide] = useState("all");
   const [grp, setGrp] = useState("all");
   const [rsvp, setRsvp] = useState("all");
+  const [fn, setFn] = useState("all");
 
   const empty = {
     id: "", name: "", side: "groom" as GuestSide, grp: "family" as GuestGroup,
     rsvp: "pending" as RsvpStatus, invitation_sent: false, food_pref: "",
-    phone: "", head_count: "1", notes: "",
+    phone: "", head_count: "1", invited_events: [] as string[], notes: "",
   };
   const [dialogOpen, setDialogOpen] = useState(Boolean(params.get("new")));
   const [form, setForm] = useState(empty);
@@ -62,9 +66,26 @@ function GuestsPageInner() {
       if (side !== "all" && g.side !== side) return false;
       if (grp !== "all" && g.grp !== grp) return false;
       if (rsvp !== "all" && g.rsvp !== rsvp) return false;
+      if (fn !== "all" && !(g.invited_events ?? []).includes(fn)) return false;
       return true;
     });
-  }, [guests, q, side, grp, rsvp]);
+  }, [guests, q, side, grp, rsvp, fn]);
+
+  // heads invited & confirmed per function — feeds catering numbers
+  const perFunction = useMemo(
+    () =>
+      activeEvents.map((e) => {
+        const invited = guests.filter((g) => (g.invited_events ?? []).includes(e.id));
+        return {
+          event: e,
+          invitedHeads: invited.reduce((s, g) => s + g.head_count, 0),
+          confirmedHeads: invited
+            .filter((g) => g.rsvp === "confirmed")
+            .reduce((s, g) => s + g.head_count, 0),
+        };
+      }),
+    [activeEvents, guests]
+  );
 
   const totals = useMemo(() => {
     const confirmed = guests.filter((g) => g.rsvp === "confirmed");
@@ -76,13 +97,29 @@ function GuestsPageInner() {
     };
   }, [guests]);
 
+  function openAdd() {
+    // new guests default to every function invited
+    setForm({ ...empty, invited_events: activeEvents.map((e) => e.id) });
+    setDialogOpen(true);
+  }
+
   function openEdit(g: Guest) {
     setForm({
       id: g.id, name: g.name, side: g.side, grp: g.grp, rsvp: g.rsvp,
       invitation_sent: g.invitation_sent, food_pref: g.food_pref ?? "",
-      phone: g.phone ?? "", head_count: String(g.head_count), notes: g.notes ?? "",
+      phone: g.phone ?? "", head_count: String(g.head_count),
+      invited_events: g.invited_events ?? [], notes: g.notes ?? "",
     });
     setDialogOpen(true);
+  }
+
+  function toggleInvited(id: string) {
+    setForm((f) => ({
+      ...f,
+      invited_events: f.invited_events.includes(id)
+        ? f.invited_events.filter((x) => x !== id)
+        : [...f.invited_events, id],
+    }));
   }
 
   async function save() {
@@ -93,6 +130,7 @@ function GuestsPageInner() {
       food_pref: form.food_pref.trim() || null,
       phone: form.phone.trim() || null,
       head_count: Number(form.head_count) || 1,
+      invited_events: form.invited_events,
       notes: form.notes.trim() || null,
     };
     if (editing) {
@@ -135,7 +173,7 @@ function GuestsPageInner() {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => { setForm(empty); setDialogOpen(true); }}>
+          <Button onClick={openAdd}>
             <Plus className="size-4" /> Add guest
           </Button>
         )}
@@ -157,6 +195,32 @@ function GuestsPageInner() {
           </Card>
         ))}
       </div>
+
+      {/* heads per function — catering numbers at a glance */}
+      {perFunction.length > 0 && (
+        <div className="card-lux p-4">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Heads invited per function
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+            {perFunction.map(({ event, invitedHeads, confirmedHeads }) => (
+              <div key={event.id} className="rounded-xl border p-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="size-2.5 rounded-full"
+                    style={{ background: EVENT_THEMES[event.theme]?.chip ?? "var(--primary)" }}
+                  />
+                  <p className="truncate text-sm font-medium">{event.name}</p>
+                </div>
+                <p className="mt-1 font-display text-2xl">{invitedHeads}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  invited · <span className="text-primary">{confirmedHeads} confirmed</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* filters */}
       <div className="flex flex-wrap gap-2">
@@ -190,6 +254,15 @@ function GuestsPageInner() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={fn} onValueChange={setFn}>
+          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Any function</SelectItem>
+            {activeEvents.map((e) => (
+              <SelectItem key={e.id} value={e.id}>Invited: {e.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* table */}
@@ -216,7 +289,27 @@ function GuestsPageInner() {
                 <TableRow key={g.id}>
                   <TableCell>
                     <p className="font-medium">{g.name}</p>
-                    {g.notes && <p className="max-w-44 truncate text-xs text-muted-foreground">{g.notes}</p>}
+                    {(g.invited_events?.length ?? 0) > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {g.invited_events.map((id) => {
+                          const ev = events.find((e) => e.id === id);
+                          if (!ev) return null;
+                          return (
+                            <span
+                              key={id}
+                              className="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                            >
+                              <span
+                                className="size-1.5 rounded-full"
+                                style={{ background: EVENT_THEMES[ev.theme]?.chip ?? "var(--primary)" }}
+                              />
+                              {ev.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {g.notes && <p className="mt-1 max-w-44 truncate text-xs text-muted-foreground">{g.notes}</p>}
                   </TableCell>
                   <TableCell className="text-sm">{SIDE_LABEL[g.side]}</TableCell>
                   <TableCell>
@@ -350,8 +443,48 @@ function GuestsPageInner() {
             </div>
             <div className="space-y-2">
               <Label>Food preference</Label>
-              <Input value={form.food_pref} onChange={(e) => setForm({ ...form, food_pref: e.target.value })} placeholder="Veg / Non-veg / Halal / Jain…" />
+              <Select
+                value={form.food_pref || "none"}
+                onValueChange={(v) => setForm({ ...form, food_pref: v === "none" ? "" : v })}
+              >
+                <SelectTrigger className="w-full"><SelectValue placeholder="Any" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any / not set</SelectItem>
+                  {FOOD_OPTIONS.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            {activeEvents.length > 0 && (
+              <div className="col-span-2 space-y-2">
+                <Label>Invited to</Label>
+                <div className="flex flex-wrap gap-2">
+                  {activeEvents.map((e) => {
+                    const on = form.invited_events.includes(e.id);
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        onClick={() => toggleInvited(e.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
+                          on
+                            ? "border-primary/40 bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-accent"
+                        )}
+                      >
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ background: EVENT_THEMES[e.theme]?.chip ?? "var(--primary)" }}
+                        />
+                        {e.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="col-span-2 flex items-center gap-2">
               <input
                 id="inv" type="checkbox" checked={form.invitation_sent}

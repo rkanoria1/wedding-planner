@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div>
-        <h1 className="font-display text-3xl">Analytics</h1>
+        <h1 className="font-display text-3xl">Insights</h1>
         <p className="text-sm text-muted-foreground">
           The full picture across tasks, money, guests and shopping.
         </p>

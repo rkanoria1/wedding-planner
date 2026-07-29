@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Gem, Loader2 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { Sidebar } from "./sidebar";
+import { MobileTabBar } from "./mobile-tabbar";
 import { GlobalSearch } from "./global-search";
 import { NotificationCenter } from "./notification-center";
 import { ThemeToggle } from "./theme-toggle";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading } = useWedding();
@@ -24,17 +25,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         {/* topbar */}
         <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger
-              render={<Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu" />}
-            >
-              <Menu className="size-5" />
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 border-0 p-0">
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <Sidebar onNavigate={() => setMobileOpen(false)} />
-            </SheetContent>
-          </Sheet>
+          {/* compact brand on mobile (desktop has the sidebar logo) */}
+          <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Home">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-gold-soft text-gold-foreground">
+              <Gem className="size-5" />
+            </span>
+            <span className="font-display text-lg leading-none">R &amp; S</span>
+          </Link>
 
           <div className="flex-1" />
           <GlobalSearch />
@@ -42,7 +39,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ThemeToggle />
         </header>
 
-        <main className="bg-celebration flex-1 p-4 sm:p-6 lg:p-8">
+        {/* full-nav drawer, opened from the bottom bar's "More" */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-72 border-0 p-0">
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <Sidebar onNavigate={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
+
+        <main className="bg-celebration flex-1 p-4 pb-24 sm:p-6 lg:p-8 lg:pb-8">
           {loading ? (
             <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-muted-foreground">
               <Loader2 className="size-8 animate-spin text-gold" />
@@ -53,6 +58,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </main>
       </div>
+
+      <MobileTabBar onMore={() => setMobileOpen(true)} />
     </div>
   );
 }

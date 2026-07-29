@@ -108,7 +108,7 @@ function TasksPageInner() {
         <div className="flex items-center gap-2">
           <Tabs value={view} onValueChange={setView}>
             <TabsList>
-              <TabsTrigger value="kanban" aria-label="Kanban"><Columns3 className="size-4" /></TabsTrigger>
+              <TabsTrigger value="kanban" aria-label="Board"><Columns3 className="size-4" /></TabsTrigger>
               <TabsTrigger value="table" aria-label="Table"><Rows3 className="size-4" /></TabsTrigger>
               <TabsTrigger value="list" aria-label="List"><LayoutList className="size-4" /></TabsTrigger>
               <TabsTrigger value="calendar" aria-label="Calendar"><CalendarDays className="size-4" /></TabsTrigger>

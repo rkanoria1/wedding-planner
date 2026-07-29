@@ -23,6 +23,7 @@ import type {
   Guest,
   Note,
   Notification,
+  Performance,
   Profile,
   ShoppingItem,
   Task,
@@ -52,6 +53,7 @@ interface WeddingData {
   expenses: Expense[];
   guests: Guest[];
   bookings: Booking[];
+  performances: Performance[];
   notifications: Notification[];
   activity: ActivityEntry[];
   notes: Note[];
@@ -84,6 +86,7 @@ type TableName =
   | "expenses"
   | "guests"
   | "bookings"
+  | "performances"
   | "notifications"
   | "activity_log"
   | "notes"
@@ -99,6 +102,7 @@ const TABLE_ORDER: Partial<Record<TableName, { column: string; ascending: boolea
   guests: { column: "name", ascending: true },
   vendors: { column: "name", ascending: true },
   bookings: { column: "sort_order", ascending: true },
+  performances: { column: "sort_order", ascending: true },
   notifications: { column: "created_at", ascending: false },
   activity_log: { column: "created_at", ascending: false },
   notes: { column: "created_at", ascending: false },
@@ -129,6 +133,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     expenses: [],
     guests: [],
     bookings: [],
+    performances: [],
     notifications: [],
     activity_log: [],
     notes: [],
@@ -188,7 +193,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     const tables: TableName[] = [
       "profiles", "app_settings", "events", "event_members", "tasks",
       "task_assignees", "task_checklist_items", "task_comments", "shopping_items",
-      "budgets", "vendors", "expenses", "guests", "bookings", "notifications",
+      "budgets", "vendors", "expenses", "guests", "bookings", "performances", "notifications",
       "activity_log", "notes", "event_files",
     ];
     const channel = db.channel("wedding-realtime");
@@ -258,6 +263,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     expenses: rows.expenses as Expense[],
     guests: rows.guests as Guest[],
     bookings: rows.bookings as Booking[],
+    performances: rows.performances as Performance[],
     notifications: rows.notifications as Notification[],
     activity: rows.activity_log as ActivityEntry[],
     notes: rows.notes as Note[],
