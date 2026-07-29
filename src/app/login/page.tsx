@@ -139,7 +139,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="s-name">Full name</Label>
                   <Input
-                    id="s-name" required placeholder="Priya Sharma"
+                    id="s-name" required placeholder="Your Name"
                     value={signup.name}
                     onChange={(e) => setSignup({ ...signup, name: e.target.value })}
                   />
