@@ -78,7 +78,7 @@ export default function LoginPage() {
           </h1>
           <p className="mt-6 max-w-md text-white/75">
             Myrah to Phera — tasks, budgets, guests and vendors for the whole
-            family, in one elegant place.
+            family, in one elegant place!!
           </p>
         </motion.div>
         <div className="relative flex items-center gap-2 text-sm text-white/60">
