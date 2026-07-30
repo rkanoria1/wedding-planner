@@ -6,6 +6,7 @@ import { Gem, Loader2 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { Sidebar } from "./sidebar";
 import { MobileTabBar } from "./mobile-tabbar";
+import { FamilySwitcher } from "./family-switcher";
 import { GlobalSearch } from "./global-search";
 import { NotificationCenter } from "./notification-center";
 import { ThemeToggle } from "./theme-toggle";
@@ -34,6 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex-1" />
+          <FamilySwitcher />
           <GlobalSearch />
           <NotificationCenter />
           <ThemeToggle />

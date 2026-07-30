@@ -37,6 +37,9 @@ interface WeddingData {
   user: User | null;
   me: Profile | null;
   isAdmin: boolean;
+  isSuperadmin: boolean;
+  viewHousehold: "rahul" | "somya" | "all";
+  setViewHousehold: (h: "rahul" | "somya" | "all") => void;
   loading: boolean;
   settings: AppSettings;
   branding: { appTitle: string; greetingName: string; coupleNames: string; household: string | null };
@@ -216,15 +219,44 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     db.from("households").select("*").then(({ data }) => setHouseholds((data as Household[]) ?? []));
   }, [db, user]);
 
+  // super-admin = admin profile with no household → oversight of both families
+  const isSuperadmin = Boolean(me && me.role === "admin" && !me.household);
+
+  // which family the super-admin is currently viewing ('all' = both)
+  const [viewHousehold, setViewHouseholdState] = useState<"rahul" | "somya" | "all">("all");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem("viewHousehold");
+    if (saved === "rahul" || saved === "somya" || saved === "all") setViewHouseholdState(saved);
+  }, []);
+  const setViewHousehold = useCallback((h: "rahul" | "somya" | "all") => {
+    setViewHouseholdState(h);
+    if (typeof window !== "undefined") window.localStorage.setItem("viewHousehold", h);
+  }, []);
+
+  // for a super-admin viewing one family, narrow the household-scoped rows
+  const activeView = isSuperadmin ? viewHousehold : "all";
+  const filterHH = useCallback(
+    <T,>(arr: T[]): T[] =>
+      activeView === "all"
+        ? arr
+        : arr.filter((r) => (r as { household?: string | null }).household === activeView),
+    [activeView]
+  );
+
   const branding = useMemo(() => {
-    const h = households.find((x) => x.id === me?.household);
+    const effectiveId = isSuperadmin ? (viewHousehold === "all" ? null : viewHousehold) : me?.household;
+    const h = households.find((x) => x.id === effectiveId);
+    if (isSuperadmin && viewHousehold === "all") {
+      return { appTitle: "Both Families", greetingName: "Admin", coupleNames: "Rahul & Somya", household: null };
+    }
     return {
       appTitle: h?.app_title ?? "Rahul & Somya",
       greetingName: h?.greeting_name ?? me?.full_name?.split(" ")[0] ?? "",
       coupleNames: h?.couple_names ?? DEFAULT_SETTINGS.couple_names,
-      household: me?.household ?? null,
+      household: effectiveId ?? null,
     };
-  }, [households, me]);
+  }, [households, me, isSuperadmin, viewHousehold]);
 
   const logActivity = useCallback(
     async (action: string, entity: string, detail: string, entityId?: string) => {
@@ -258,25 +290,28 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     user,
     me,
     isAdmin: me?.role === "admin",
+    isSuperadmin,
+    viewHousehold,
+    setViewHousehold,
     loading,
     settings: (rows.app_settings[0] as AppSettings) ?? DEFAULT_SETTINGS,
     branding,
     profiles,
     events: rows.events as WeddingEvent[],
     eventMembers: rows.event_members as EventMember[],
-    tasks: rows.tasks as Task[],
+    tasks: filterHH(rows.tasks as Task[]),
     taskAssignees: rows.task_assignees as TaskAssignee[],
     checklistItems: rows.task_checklist_items as ChecklistItem[],
     comments: rows.task_comments as TaskComment[],
-    shoppingItems: rows.shopping_items as ShoppingItem[],
-    vendors: rows.vendors as Vendor[],
-    guests: rows.guests as Guest[],
-    bookings: rows.bookings as Booking[],
-    performances: rows.performances as Performance[],
+    shoppingItems: filterHH(rows.shopping_items as ShoppingItem[]),
+    vendors: filterHH(rows.vendors as Vendor[]),
+    guests: filterHH(rows.guests as Guest[]),
+    bookings: filterHH(rows.bookings as Booking[]),
+    performances: filterHH(rows.performances as Performance[]),
     notifications: rows.notifications as Notification[],
-    activity: rows.activity_log as ActivityEntry[],
-    notes: rows.notes as Note[],
-    files: rows.event_files as EventFile[],
+    activity: filterHH(rows.activity_log as ActivityEntry[]),
+    notes: filterHH(rows.notes as Note[]),
+    files: filterHH(rows.event_files as EventFile[]),
     refresh,
     logActivity,
     notify,
