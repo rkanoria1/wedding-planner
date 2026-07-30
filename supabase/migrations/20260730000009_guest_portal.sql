@@ -2,11 +2,9 @@
 -- Guest portal: role, content tables, RLS walls
 -- ============================================================
 
--- ---------- guest role ----------
-do $$ begin
-  alter type public.user_role add value if not exists 'guest';
-exception when duplicate_object then null;
-end $$;
+-- ---------- guest role (must be top-level; DO NOT wrap in a transaction/DO
+-- block that also uses the value — Postgres requires a commit first) ----------
+alter type public.user_role add value if not exists 'guest';
 
 create or replace function public.is_guest()
 returns boolean
