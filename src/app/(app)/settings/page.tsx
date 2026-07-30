@@ -9,6 +9,7 @@ import type { UserRole, WeddingEvent } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
 import { EventDialog } from "@/components/events/event-dialog";
 import { NotesSection } from "@/components/events/event-sections";
+import { BlessingsModeration } from "@/components/guest/family-editors";
 import { EventIcon } from "@/components/shared/event-icon";
 import { MemberAvatar } from "@/components/shared/member-avatars";
 import { Badge } from "@/components/ui/badge";
@@ -97,6 +98,7 @@ function SettingsPageInner() {
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="guest">Guest posts</TabsTrigger>
           <TabsTrigger value="profile">My Profile</TabsTrigger>
         </TabsList>
 
@@ -182,7 +184,7 @@ function SettingsPageInner() {
         {/* members */}
         <TabsContent value="members" className="mt-4">
           <div className="card-lux divide-y">
-            {profiles.map((p) => (
+            {profiles.filter((p) => p.role !== "guest").map((p) => (
               <div key={p.id} className="flex items-center gap-3 px-4 py-3">
                 <MemberAvatar profile={p} size="size-9" />
                 <div className="min-w-0 flex-1">
@@ -211,6 +213,10 @@ function SettingsPageInner() {
         {/* notes */}
         <TabsContent value="notes" className="mt-4">
           <NotesSection />
+        </TabsContent>
+
+        <TabsContent value="guest" className="mt-4">
+          <BlessingsModeration />
         </TabsContent>
 
         {/* profile */}

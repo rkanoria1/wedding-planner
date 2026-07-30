@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "family" | "volunteer";
+export type UserRole = "admin" | "family" | "volunteer" | "guest";
 export type TaskStatus =
   | "not_started"
   | "in_progress"
@@ -96,6 +96,51 @@ export interface Photo {
   url: string;
   caption: string | null;
   uploaded_by: string | null;
+  source: "family" | "guest";
+  author_label: string | null;
+  hidden: boolean;
+  created_at: string;
+}
+
+export interface TimelineItem {
+  id: string;
+  event_id: string;
+  starts_at: string;
+  title: string;
+  note: string | null;
+  people: string | null;
+  sort_order: number;
+  published: boolean;
+  created_at: string;
+}
+
+export interface Lookbook {
+  id: string;
+  event_id: string;
+  cover_url: string | null;
+  outfit_notes: string | null;
+  jewelry_notes: string | null;
+  colors: { label: string; hex: string }[];
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LookbookPhoto {
+  id: string;
+  lookbook_id: string;
+  url: string;
+  caption: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface Blessing {
+  id: string;
+  body: string;
+  author_label: string;
+  hidden: boolean;
+  created_by: string | null;
   created_at: string;
 }
 

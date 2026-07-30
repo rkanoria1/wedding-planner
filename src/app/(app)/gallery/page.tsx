@@ -16,14 +16,21 @@ export default function GalleryPage() {
   const { db, me, isAdmin, photos, events, refresh, logActivity } = useWedding();
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "guest" | "family">("all");
   const [uploadEvent, setUploadEvent] = useState<string>("all");
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<Photo | null>(null);
 
   const activeEvents = useMemo(() => events.filter((e) => !e.archived), [events]);
   const shown = useMemo(
-    () => (filter === "all" ? photos : photos.filter((p) => p.event_id === filter)),
-    [photos, filter]
+    () =>
+      photos.filter((p) => {
+        if (filter !== "all" && p.event_id !== filter) return false;
+        if (sourceFilter === "guest" && p.source !== "guest") return false;
+        if (sourceFilter === "family" && p.source === "guest") return false;
+        return true;
+      }),
+    [photos, filter, sourceFilter]
   );
 
   async function upload(files: FileList) {
@@ -39,6 +46,8 @@ export default function GalleryPage() {
         event_id: uploadEvent === "all" ? null : uploadEvent,
         caption: file.name.replace(/\.[^.]+$/, ""),
         uploaded_by: me?.id ?? null,
+        source: "family",
+        hidden: false,
       });
     }
     await logActivity("added", "photo", "to the gallery");
@@ -52,6 +61,13 @@ export default function GalleryPage() {
     refresh("photos");
     setLightbox(null);
     toast.success("Photo removed");
+  }
+
+  async function toggleHidden(p: Photo) {
+    await db.from("photos").update({ hidden: !p.hidden }).eq("id", p.id);
+    refresh("photos");
+    setLightbox({ ...p, hidden: !p.hidden });
+    toast.success(p.hidden ? "Photo visible again" : "Photo hidden from guests");
   }
 
   const canDelete = (p: Photo) => isAdmin || p.uploaded_by === me?.id;
@@ -114,6 +130,10 @@ export default function GalleryPage() {
             onClick={() => setFilter(e.id)}
           />
         ))}
+        <span className="mx-1 self-center text-muted-foreground">·</span>
+        <FilterChip label="Family" active={sourceFilter === "family"} onClick={() => setSourceFilter("family")} />
+        <FilterChip label="From guests" active={sourceFilter === "guest"} onClick={() => setSourceFilter("guest")} />
+        <FilterChip label="Everyone" active={sourceFilter === "all"} onClick={() => setSourceFilter("all")} />
       </div>
 
       {/* grid */}
@@ -148,6 +168,17 @@ export default function GalleryPage() {
                     {ev.name}
                   </span>
                 )}
+                {p.source === "guest" && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                    Guest{p.author_label ? ` · ${p.author_label}` : ""}
+                    {p.hidden ? " · hidden" : ""}
+                  </span>
+                )}
+                {p.hidden && p.source !== "guest" && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                    Hidden
+                  </span>
+                )}
               </motion.button>
             );
           })}
@@ -166,13 +197,22 @@ export default function GalleryPage() {
                   <p className="truncate text-sm font-medium">{lightbox.caption}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatDate(lightbox.created_at, "d MMM yyyy")}
+                    {lightbox.author_label ? ` · ${lightbox.author_label}` : ""}
+                    {lightbox.hidden ? " · hidden" : ""}
                   </p>
                 </div>
-                {canDelete(lightbox) && (
-                  <Button variant="outline" size="sm" className="text-destructive" onClick={() => remove(lightbox)}>
-                    <Trash2 className="size-4" /> Remove
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => toggleHidden(lightbox)}>
+                      {lightbox.hidden ? "Unhide" : "Hide"}
+                    </Button>
+                  )}
+                  {canDelete(lightbox) && (
+                    <Button variant="outline" size="sm" className="text-destructive" onClick={() => remove(lightbox)}>
+                      <Trash2 className="size-4" /> Remove
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           )}

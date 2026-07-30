@@ -24,6 +24,9 @@ import {
 import { KanbanBoard } from "@/components/tasks/kanban";
 import { TaskSheet } from "@/components/tasks/task-sheet";
 import { ShoppingSection } from "@/components/shopping/shopping-section";
+import {
+  BlessingsModeration, LookbookEditor, TimelineEditor,
+} from "@/components/guest/family-editors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,6 +146,8 @@ export default function EventPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="shopping">Shopping</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="lookbook">Lookbook</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -229,6 +234,14 @@ export default function EventPage() {
 
         <TabsContent value="shopping" className="mt-4">
           <ShoppingSection eventId={event.id} />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-4">
+          <TimelineEditor eventId={event.id} />
+        </TabsContent>
+
+        <TabsContent value="lookbook" className="mt-4">
+          <LookbookEditor eventId={event.id} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-4">

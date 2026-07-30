@@ -14,12 +14,15 @@ import { createClient } from "@/lib/supabase/client";
 import type {
   ActivityEntry,
   AppSettings,
+  Blessing,
   Booking,
   ChecklistItem,
   EventFile,
   EventMember,
   Guest,
   Household,
+  Lookbook,
+  LookbookPhoto,
   Note,
   Notification,
   Performance,
@@ -29,6 +32,7 @@ import type {
   Task,
   TaskAssignee,
   TaskComment,
+  TimelineItem,
   Vendor,
   WeddingEvent,
 } from "@/lib/types";
@@ -38,6 +42,7 @@ interface WeddingData {
   user: User | null;
   me: Profile | null;
   isAdmin: boolean;
+  isGuest: boolean;
   isSuperadmin: boolean;
   viewHousehold: "rahul" | "somya" | "all";
   setViewHousehold: (h: "rahul" | "somya" | "all") => void;
@@ -61,6 +66,10 @@ interface WeddingData {
   activity: ActivityEntry[];
   notes: Note[];
   files: EventFile[];
+  timelineItems: TimelineItem[];
+  lookbooks: Lookbook[];
+  lookbookPhotos: LookbookPhoto[];
+  blessings: Blessing[];
   refresh: (table: TableName) => Promise<void>;
   logActivity: (action: string, entity: string, detail: string, entityId?: string) => Promise<void>;
   notify: (profileId: string, title: string, body?: string, link?: string) => Promise<void>;
@@ -92,7 +101,11 @@ type TableName =
   | "notifications"
   | "activity_log"
   | "notes"
-  | "event_files";
+  | "event_files"
+  | "timeline_items"
+  | "lookbooks"
+  | "lookbook_photos"
+  | "blessings";
 
 const TABLE_ORDER: Partial<Record<TableName, { column: string; ascending: boolean }>> = {
   events: { column: "sort_order", ascending: true },
@@ -109,6 +122,10 @@ const TABLE_ORDER: Partial<Record<TableName, { column: string; ascending: boolea
   activity_log: { column: "created_at", ascending: false },
   notes: { column: "created_at", ascending: false },
   event_files: { column: "created_at", ascending: false },
+  timeline_items: { column: "sort_order", ascending: true },
+  lookbooks: { column: "created_at", ascending: true },
+  lookbook_photos: { column: "sort_order", ascending: true },
+  blessings: { column: "created_at", ascending: false },
 };
 
 const DataContext = createContext<WeddingData | null>(null);
@@ -139,6 +156,10 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     activity_log: [],
     notes: [],
     event_files: [],
+    timeline_items: [],
+    lookbooks: [],
+    lookbook_photos: [],
+    blessings: [],
   });
 
   const refresh = useCallback(
@@ -196,6 +217,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
       "task_assignees", "task_checklist_items", "task_comments", "shopping_items",
       "vendors", "guests", "bookings", "performances", "photos", "notifications",
       "activity_log", "notes", "event_files",
+      "timeline_items", "lookbooks", "lookbook_photos", "blessings",
     ];
     const channel = db.channel("wedding-realtime");
     for (const table of tables) {
@@ -295,6 +317,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     user,
     me,
     isAdmin: me?.role === "admin",
+    isGuest: me?.role === "guest",
     isSuperadmin,
     viewHousehold,
     setViewHousehold,
@@ -313,11 +336,23 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     guests: filterHH(rows.guests as Guest[]),
     bookings: filterHH(rows.bookings as Booking[]),
     performances: filterHH(rows.performances as Performance[]),
-    photos: rows.photos as Photo[],
+    photos: (rows.photos as Photo[]).map((p) => ({
+      ...p,
+      source: p.source ?? "family",
+      hidden: Boolean(p.hidden),
+      author_label: p.author_label ?? null,
+    })),
     notifications: rows.notifications as Notification[],
     activity: filterHH(rows.activity_log as ActivityEntry[]),
     notes: filterHH(rows.notes as Note[]),
     files: filterHH(rows.event_files as EventFile[]),
+    timelineItems: rows.timeline_items as TimelineItem[],
+    lookbooks: (rows.lookbooks as Lookbook[]).map((lb) => ({
+      ...lb,
+      colors: Array.isArray(lb.colors) ? lb.colors : [],
+    })),
+    lookbookPhotos: rows.lookbook_photos as LookbookPhoto[],
+    blessings: rows.blessings as Blessing[],
     refresh,
     logActivity,
     notify,
