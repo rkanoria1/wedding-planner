@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
-  Copy, Loader2, MessageCircle, Plus, Send, Trash2, X,
+  Copy, Loader2, MessageCircle, Plus, Send, Trash2, Users, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
@@ -62,7 +62,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
     event_id: defaultEventId ?? "none",
     priority: "medium" as TaskPriority,
     status: "not_started" as TaskStatus,
-    due_date: "", completion: 0,
+    due_date: "", completion: 0, shared: false,
   });
   const [assigned, setAssigned] = useState<string[]>([]);
   const [newItem, setNewItem] = useState("");
@@ -80,6 +80,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
         status: existing.status,
         due_date: existing.due_date ?? "",
         completion: existing.completion,
+        shared: existing.shared,
       });
       setAssigned(
         taskAssignees.filter((a) => a.task_id === existing.id).map((a) => a.profile_id)
@@ -88,7 +89,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
       setForm({
         name: "", description: "", category: "General",
         event_id: defaultEventId ?? "none",
-        priority: "medium", status: "not_started", due_date: "", completion: 0,
+        priority: "medium", status: "not_started", due_date: "", completion: 0, shared: false,
       });
       setAssigned([]);
     }
@@ -131,6 +132,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
       priority: form.priority,
       status: form.status,
       due_date: form.due_date || null,
+      shared: form.shared,
       completion: form.status === "completed" ? 100 : form.completion,
     };
 
@@ -372,6 +374,23 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               />
             </div>
           </div>
+
+          {/* shared across both families */}
+          <label className="flex items-center gap-3 rounded-xl border bg-muted/40 p-3">
+            <Checkbox
+              checked={form.shared}
+              disabled={!canEdit}
+              onCheckedChange={(v) => setForm({ ...form, shared: Boolean(v) })}
+            />
+            <span>
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <Users className="size-4 text-gold" /> Shared with both families
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Both Rahul&apos;s and Somya&apos;s families will see and can update this task.
+              </span>
+            </span>
+          </label>
 
           {/* assignees */}
           <div className="space-y-2">

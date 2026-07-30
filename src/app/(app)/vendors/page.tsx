@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Vendor } from "@/lib/types";
-import { formatMoney, whatsappLink } from "@/lib/wedding";
+import { whatsappLink } from "@/lib/wedding";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,13 +64,12 @@ function Stars({
 
 function VendorsPageInner() {
   const params = useSearchParams();
-  const { db, isAdmin, vendors, settings, refresh, logActivity } = useWedding();
-  const currency = settings.currency;
+  const { db, isAdmin, vendors, refresh, logActivity } = useWedding();
 
   const [catFilter, setCatFilter] = useState("all");
   const empty = {
     id: "", name: "", category: "Photographer", phone: "",
-    total_amount: "", advance_paid: "", booked: false, rating: 0, notes: "",
+    booked: false, rating: 0, notes: "",
   };
   const [dialogOpen, setDialogOpen] = useState(Boolean(params.get("new")));
   const [form, setForm] = useState(empty);
@@ -81,16 +80,11 @@ function VendorsPageInner() {
     [vendors, catFilter]
   );
 
-  const totalAdvances = vendors.reduce((s, v) => s + Number(v.advance_paid), 0);
-  const totalBalance = vendors.reduce(
-    (s, v) => s + Math.max(0, Number(v.total_amount) - Number(v.advance_paid)),
-    0
-  );
+  const bookedCount = vendors.filter((v) => v.booked).length;
 
   function openEdit(v: Vendor) {
     setForm({
       id: v.id, name: v.name, category: v.category, phone: v.phone ?? "",
-      total_amount: String(v.total_amount), advance_paid: String(v.advance_paid),
       booked: v.booked, rating: v.rating ?? 0, notes: v.notes ?? "",
     });
     setDialogOpen(true);
@@ -101,8 +95,6 @@ function VendorsPageInner() {
     const payload = {
       name: form.name.trim(), category: form.category,
       phone: form.phone.trim() || null,
-      total_amount: Number(form.total_amount) || 0,
-      advance_paid: Number(form.advance_paid) || 0,
       booked: form.booked,
       rating: form.rating || null,
       notes: form.notes.trim() || null,
@@ -144,8 +136,7 @@ function VendorsPageInner() {
         <div>
           <h1 className="font-display text-3xl">Vendors</h1>
           <p className="text-sm text-muted-foreground">
-            {vendors.filter((v) => v.booked).length} of {vendors.length} booked ·{" "}
-            {formatMoney(totalAdvances, currency)} advanced · {formatMoney(totalBalance, currency)} balance due
+            {bookedCount} of {vendors.length} booked
           </p>
         </div>
         <div className="flex gap-2">
@@ -170,103 +161,80 @@ function VendorsPageInner() {
         <EmptyState icon={Store} title="No vendors yet" hint="Add photographers, caterers, decorators…" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((v, i) => {
-            const balance = Math.max(0, Number(v.total_amount) - Number(v.advance_paid));
-            return (
-              <motion.div
-                key={v.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.4) }}
-              >
-                <Card className="card-lux h-full shadow-none">
-                  <CardContent className="flex h-full flex-col gap-3 pt-6">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-display text-lg leading-tight">{v.name}</p>
-                        <Badge variant="outline" className="mt-1">{v.category}</Badge>
-                      </div>
-                      {v.booked ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:text-primary">
-                          <BadgeCheck className="size-3.5" /> Booked
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-                          Exploring
-                        </span>
-                      )}
+          {filtered.map((v, i) => (
+            <motion.div
+              key={v.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.4) }}
+            >
+              <Card className="card-lux h-full shadow-none">
+                <CardContent className="flex h-full flex-col gap-3 pt-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-display text-lg leading-tight">{v.name}</p>
+                      <Badge variant="outline" className="mt-1">{v.category}</Badge>
                     </div>
-
-                    <Stars value={v.rating} onChange={isAdmin ? (r) => rate(v, r) : undefined} />
-
-                    <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/60 p-3 text-center">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Total</p>
-                        <p className="text-sm font-medium tabular-nums">{formatMoney(Number(v.total_amount), currency)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Advance</p>
-                        <p className="text-sm font-medium tabular-nums text-primary dark:text-primary">
-                          {formatMoney(Number(v.advance_paid), currency)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Balance</p>
-                        <p className={cn("text-sm font-medium tabular-nums", balance > 0 && "text-orange-600 dark:text-orange-400")}>
-                          {formatMoney(balance, currency)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {v.notes && (
-                      <p className="line-clamp-2 text-xs text-muted-foreground">{v.notes}</p>
+                    {v.booked ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:text-primary">
+                        <BadgeCheck className="size-3.5" /> Booked
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+                        Exploring
+                      </span>
                     )}
+                  </div>
 
-                    <div className="mt-auto flex items-center gap-2 pt-1">
-                      {v.phone && (
-                        <>
-                          <a
-                            href={`tel:${v.phone}`}
-                            className="inline-flex size-8 items-center justify-center rounded-full border text-muted-foreground hover:bg-accent"
-                            aria-label="Call"
-                          >
-                            <Phone className="size-3.5" />
-                          </a>
-                          <a
-                            href={whatsappLink(v.phone, `Hi! Regarding the wedding on 15 Jan 2027 —`)}
-                            target="_blank" rel="noreferrer"
-                            className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
-                            aria-label="WhatsApp"
-                          >
-                            <MessageCircle className="size-3.5" />
-                          </a>
-                        </>
-                      )}
-                      <div className="flex-1" />
-                      {isAdmin && (
-                        <>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs text-muted-foreground">Booked</span>
-                            <Switch checked={v.booked} onCheckedChange={() => toggleBooked(v)} />
-                          </div>
-                          <Button size="icon" variant="ghost" className="size-7" aria-label="Edit" onClick={() => openEdit(v)}>
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="size-7 text-destructive" aria-label="Delete" onClick={() => remove(v)}>
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+                  <Stars value={v.rating} onChange={isAdmin ? (r) => rate(v, r) : undefined} />
+
+                  {v.notes && (
+                    <p className="line-clamp-2 text-xs text-muted-foreground">{v.notes}</p>
+                  )}
+
+                  <div className="mt-auto flex items-center gap-2 pt-1">
+                    {v.phone && (
+                      <>
+                        <a
+                          href={`tel:${v.phone}`}
+                          className="inline-flex size-8 items-center justify-center rounded-full border text-muted-foreground hover:bg-accent"
+                          aria-label="Call"
+                        >
+                          <Phone className="size-3.5" />
+                        </a>
+                        <a
+                          href={whatsappLink(v.phone, `Hi! Regarding the wedding on 15 Jan 2027 —`)}
+                          target="_blank" rel="noreferrer"
+                          className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
+                          aria-label="WhatsApp"
+                        >
+                          <MessageCircle className="size-3.5" />
+                        </a>
+                      </>
+                    )}
+                    <div className="flex-1" />
+                    {isAdmin && (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground">Booked</span>
+                          <Switch checked={v.booked} onCheckedChange={() => toggleBooked(v)} />
+                        </div>
+                        <Button size="icon" variant="ghost" className="size-7" aria-label="Edit" onClick={() => openEdit(v)}>
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="size-7 text-destructive" aria-label="Delete" onClick={() => remove(v)}>
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
       )}
 
-      {/* dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -293,14 +261,6 @@ function VendorsPageInner() {
             <div className="space-y-2">
               <Label>Phone</Label>
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91…" />
-            </div>
-            <div className="space-y-2">
-              <Label>Total amount ({currency})</Label>
-              <Input type="number" min={0} value={form.total_amount} onChange={(e) => setForm({ ...form, total_amount: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Advance paid ({currency})</Label>
-              <Input type="number" min={0} value={form.advance_paid} onChange={(e) => setForm({ ...form, advance_paid: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Rating</Label>

@@ -161,7 +161,7 @@ export default function EventPage() {
             </Card>
             <Card className="card-lux shadow-none">
               <CardContent className="pt-6">
-                <p className="text-xs text-muted-foreground">Shopping done</p>
+                <p className="text-xs text-muted-foreground">Checklist done</p>
                 <p className="font-display text-2xl">
                   {evShopping.filter((i) => i.purchased).length}/{evShopping.length}
                 </p>

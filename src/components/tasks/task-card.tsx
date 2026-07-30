@@ -1,5 +1,6 @@
 "use client";
 
+import { Users2 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import type { Task } from "@/lib/types";
 import {
@@ -36,9 +37,16 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug">{task.name}</p>
-        <Badge variant="outline" className={`${PRIORITY_META[task.priority].className} shrink-0`}>
-          {PRIORITY_META[task.priority].label}
-        </Badge>
+        <div className="flex shrink-0 items-center gap-1">
+          {task.shared && (
+            <Badge variant="outline" className="gap-1 border-gold/40 bg-gold-soft/60 text-gold-foreground">
+              <Users2 className="size-3" /> Shared
+            </Badge>
+          )}
+          <Badge variant="outline" className={PRIORITY_META[task.priority].className}>
+            {PRIORITY_META[task.priority].label}
+          </Badge>
+        </div>
       </div>
 
       {(task.completion > 0 || items.length > 0) && (

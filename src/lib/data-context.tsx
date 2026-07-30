@@ -23,6 +23,7 @@ import type {
   Note,
   Notification,
   Performance,
+  Photo,
   Profile,
   ShoppingItem,
   Task,
@@ -55,6 +56,7 @@ interface WeddingData {
   guests: Guest[];
   bookings: Booking[];
   performances: Performance[];
+  photos: Photo[];
   notifications: Notification[];
   activity: ActivityEntry[];
   notes: Note[];
@@ -86,6 +88,7 @@ type TableName =
   | "guests"
   | "bookings"
   | "performances"
+  | "photos"
   | "notifications"
   | "activity_log"
   | "notes"
@@ -101,6 +104,7 @@ const TABLE_ORDER: Partial<Record<TableName, { column: string; ascending: boolea
   vendors: { column: "name", ascending: true },
   bookings: { column: "sort_order", ascending: true },
   performances: { column: "sort_order", ascending: true },
+  photos: { column: "created_at", ascending: false },
   notifications: { column: "created_at", ascending: false },
   activity_log: { column: "created_at", ascending: false },
   notes: { column: "created_at", ascending: false },
@@ -130,6 +134,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     guests: [],
     bookings: [],
     performances: [],
+    photos: [],
     notifications: [],
     activity_log: [],
     notes: [],
@@ -189,7 +194,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     const tables: TableName[] = [
       "profiles", "app_settings", "events", "event_members", "tasks",
       "task_assignees", "task_checklist_items", "task_comments", "shopping_items",
-      "vendors", "guests", "bookings", "performances", "notifications",
+      "vendors", "guests", "bookings", "performances", "photos", "notifications",
       "activity_log", "notes", "event_files",
     ];
     const channel = db.channel("wedding-realtime");
@@ -308,6 +313,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     guests: filterHH(rows.guests as Guest[]),
     bookings: filterHH(rows.bookings as Booking[]),
     performances: filterHH(rows.performances as Performance[]),
+    photos: rows.photos as Photo[],
     notifications: rows.notifications as Notification[],
     activity: filterHH(rows.activity_log as ActivityEntry[]),
     notes: filterHH(rows.notes as Note[]),

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   BadgeCheck, CalendarClock, CircleCheckBig, ClipboardList, FileSignature,
-  MessageCircle, Phone, Plus, Scissors, Sparkles, TriangleAlert, Wallet,
+  MessageCircle, Phone, Plus, Scissors, Sparkles, TriangleAlert,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import type { Booking } from "@/lib/types";
@@ -13,7 +13,7 @@ import {
   BOOKING_STATUS_META, BOOKING_URGENCY_META, bookingStats, bookingUrgency,
   categoryMeta, idealBookByDate, isSecured, upcomingMilestones, urgencyRank,
 } from "@/lib/bookings";
-import { formatDate, formatMoney, whatsappLink } from "@/lib/wedding";
+import { formatDate, whatsappLink } from "@/lib/wedding";
 import { ProgressRing } from "@/components/shared/progress-ring";
 import { ShareWhatsApp, PrintButton } from "@/components/shared/share-print";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -149,19 +149,21 @@ function BookingsPageInner() {
             />
             <div className="space-y-1 text-sm">
               <p className="flex items-center gap-1.5">
-                <Wallet className="size-4 text-primary" />
-                <span className="text-muted-foreground">Advances:</span>
-                <span className="font-medium">{formatMoney(stats.advancePaid, settings.currency)}</span>
-              </p>
-              <p className="flex items-center gap-1.5">
-                <FileSignature className="size-4 text-gold" />
-                <span className="text-muted-foreground">Balance due:</span>
-                <span className="font-medium">{formatMoney(stats.balanceDue, settings.currency)}</span>
-              </p>
-              <p className="flex items-center gap-1.5">
                 <CircleCheckBig className="size-4 text-primary" />
                 <span className="text-muted-foreground">Secured:</span>
                 <span className="font-medium">{stats.secured}/{stats.total}</span>
+              </p>
+              <p className="flex items-center gap-1.5">
+                <CalendarClock className="size-4 text-amber-600" />
+                <span className="text-muted-foreground">Pending:</span>
+                <span className="font-medium">{stats.pending}</span>
+              </p>
+              <p className="flex items-center gap-1.5">
+                <FileSignature className="size-4 text-gold" />
+                <span className="text-muted-foreground">Contracts signed:</span>
+                <span className="font-medium">
+                  {bookings.filter((b) => b.contract_signed && b.status !== "cancelled").length}
+                </span>
               </p>
             </div>
           </div>
@@ -329,22 +331,6 @@ function BookingsPageInner() {
                         size="sm"
                         onChange={isAdmin ? (s) => setStatus(b, s) : undefined}
                       />
-                    </div>
-
-                    {/* money */}
-                    <div className="flex shrink-0 items-center gap-4 text-sm">
-                      <div className="text-right">
-                        <p className="text-[11px] text-muted-foreground">Advance</p>
-                        <p className="font-medium tabular-nums text-primary dark:text-primary">
-                          {formatMoney(Number(b.advance_paid), settings.currency)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[11px] text-muted-foreground">Balance</p>
-                        <p className="font-medium tabular-nums">
-                          {formatMoney(Number(b.balance_due), settings.currency)}
-                        </p>
-                      </div>
                     </div>
 
                     {/* actions */}

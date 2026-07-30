@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  CheckCircle2, Circle, Paperclip, Plus, ShoppingBag, Trash2, Upload,
+  CheckCircle2, Circle, Plus, ShoppingBag, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { ShoppingItem } from "@/lib/types";
-import { formatMoney, shoppingProgress } from "@/lib/wedding";
+import { shoppingProgress } from "@/lib/wedding";
 import { GradientBar } from "@/components/shared/gradient-bar";
 import { MemberAvatar } from "@/components/shared/member-avatars";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -34,11 +34,8 @@ export const SHOPPING_CATEGORIES = [
 
 export function ShoppingSection({ eventId, openNew = false }: { eventId?: string | null; openNew?: boolean }) {
   const {
-    db, me, isAdmin, shoppingItems, events, profiles, settings, refresh, logActivity, notify,
+    db, me, isAdmin, shoppingItems, events, profiles, refresh, logActivity, notify,
   } = useWedding();
-  const currency = settings.currency;
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
 
   const [catFilter, setCatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,15 +56,9 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
     [shoppingItems, eventId]
   );
 
-  const totalBudget = scopedAll.reduce((s, i) => s + Number(i.budget), 0);
-  const totalSpent = scopedAll
-    .filter((i) => i.purchased)
-    .reduce((s, i) => s + Number(i.actual_price ?? 0), 0);
-
-  /* ————— dialog ————— */
   const empty = {
-    id: "", name: "", category: "Clothes", quantity: "1", budget: "",
-    actual_price: "", store: "", assigned_to: "none",
+    id: "", name: "", category: "Clothes", quantity: "1",
+    store: "", assigned_to: "none",
     event_id: eventId ?? "none", notes: "",
   };
   const [dialogOpen, setDialogOpen] = useState(openNew);
@@ -77,8 +68,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
   function openEdit(item: ShoppingItem) {
     setForm({
       id: item.id, name: item.name, category: item.category,
-      quantity: String(item.quantity), budget: String(item.budget),
-      actual_price: item.actual_price != null ? String(item.actual_price) : "",
+      quantity: String(item.quantity),
       store: item.store ?? "", assigned_to: item.assigned_to ?? "none",
       event_id: item.event_id ?? "none", notes: item.notes ?? "",
     });
@@ -95,8 +85,6 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
       name: form.name.trim(),
       category: form.category,
       quantity: Number(form.quantity) || 1,
-      budget: Number(form.budget) || 0,
-      actual_price: form.actual_price === "" ? null : Number(form.actual_price),
       store: form.store.trim() || null,
       assigned_to: form.assigned_to === "none" ? null : form.assigned_to,
       event_id: form.event_id === "none" ? null : form.event_id,
@@ -128,7 +116,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
       .eq("id", item.id);
     if (error) return toast.error(error.message);
     if (!item.purchased) {
-      await logActivity("purchased", "shopping_item", `${item.name}${item.actual_price ? ` — ${formatMoney(Number(item.actual_price), currency)}` : ""}`, item.id);
+      await logActivity("purchased", "shopping_item", item.name, item.id);
     }
     refresh("shopping_items");
   }
@@ -139,26 +127,15 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
     refresh("shopping_items");
   }
 
-  async function uploadReceipt(item: ShoppingItem, file: File) {
-    const path = `${item.id}/${Date.now()}-${file.name}`;
-    const { error } = await db.storage.from("receipts").upload(path, file);
-    if (error) return toast.error(error.message);
-    const { data } = db.storage.from("receipts").getPublicUrl(path);
-    await db.from("shopping_items").update({ receipt_url: data.publicUrl }).eq("id", item.id);
-    refresh("shopping_items");
-    toast.success("Receipt attached");
-  }
-
   const eventName = (id: string | null) =>
     id ? events.find((e) => e.id === id)?.name ?? "—" : "General";
 
   return (
     <div className="space-y-5">
-      {/* summary */}
       <Card className="card-lux shadow-none">
         <CardContent className="flex flex-wrap items-center gap-6 pt-6">
           <div>
-            <p className="text-xs text-muted-foreground">Purchased</p>
+            <p className="text-xs text-muted-foreground">Bought</p>
             <p className="font-display text-2xl">
               {scopedAll.filter((i) => i.purchased).length}/{scopedAll.length}
             </p>
@@ -166,18 +143,12 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
           <div className="min-w-40 flex-1">
             <GradientBar value={shoppingProgress(scopedAll)} />
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Budgeted</p>
-            <p className="font-display text-xl">{formatMoney(totalBudget, currency)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Spent</p>
-            <p className="font-display text-xl">{formatMoney(totalSpent, currency)}</p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Checklist only — tick items as they are bought.
+          </p>
         </CardContent>
       </Card>
 
-      {/* filters + add */}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={catFilter} onValueChange={setCatFilter}>
           <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
@@ -193,7 +164,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
           <SelectContent>
             <SelectItem value="all">All items</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="purchased">Purchased</SelectItem>
+            <SelectItem value="purchased">Bought</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex-1" />
@@ -204,9 +175,8 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
         )}
       </div>
 
-      {/* table */}
       {scoped.length === 0 ? (
-        <EmptyState icon={ShoppingBag} title="Nothing here yet" hint="Add items to build the trousseau." />
+        <EmptyState icon={ShoppingBag} title="Nothing here yet" hint="Add items to build the shopping checklist." />
       ) : (
         <div className="card-lux overflow-x-auto scrollbar-thin">
           <Table>
@@ -217,11 +187,8 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                 <TableHead>Category</TableHead>
                 {eventId === undefined && <TableHead>Event</TableHead>}
                 <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Budget</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
                 <TableHead>Store</TableHead>
                 <TableHead>Assigned</TableHead>
-                <TableHead>Receipt</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -236,7 +203,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                     <TableCell>
                       <button
                         onClick={() => togglePurchased(item)}
-                        aria-label={item.purchased ? "Mark pending" : "Mark purchased"}
+                        aria-label={item.purchased ? "Mark pending" : "Mark bought"}
                       >
                         {item.purchased ? (
                           <CheckCircle2 className="size-5 text-primary" />
@@ -265,36 +232,11 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                       </TableCell>
                     )}
                     <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatMoney(Number(item.budget), currency)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {item.actual_price != null ? formatMoney(Number(item.actual_price), currency) : "—"}
-                    </TableCell>
                     <TableCell className="max-w-32 truncate text-sm text-muted-foreground">
                       {item.store ?? "—"}
                     </TableCell>
                     <TableCell>
                       {assignee ? <MemberAvatar profile={assignee} /> : <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell>
-                      {item.receipt_url ? (
-                        <a
-                          href={item.receipt_url} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                        >
-                          <Paperclip className="size-3.5" /> View
-                        </a>
-                      ) : canEditItem(item) ? (
-                        <button
-                          onClick={() => { setUploadingFor(item.id); fileRef.current?.click(); }}
-                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          <Upload className="size-3.5" /> Attach
-                        </button>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
@@ -314,21 +256,6 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
         </div>
       )}
 
-      {/* hidden receipt input */}
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*,.pdf"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          const item = scoped.find((i) => i.id === uploadingFor);
-          if (f && item) uploadReceipt(item, f);
-          e.target.value = "";
-        }}
-      />
-
-      {/* add/edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -356,17 +283,9 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
               <Label>Quantity</Label>
               <Input type="number" min={1} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </div>
-            <div className="space-y-2">
-              <Label>Budget ({currency})</Label>
-              <Input type="number" min={0} value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Actual price ({currency})</Label>
-              <Input type="number" min={0} value={form.actual_price} onChange={(e) => setForm({ ...form, actual_price: e.target.value })} />
-            </div>
-            <div className="space-y-2">
+            <div className="col-span-2 space-y-2">
               <Label>Store</Label>
-              <Input value={form.store} onChange={(e) => setForm({ ...form, store: e.target.value })} />
+              <Input value={form.store} onChange={(e) => setForm({ ...form, store: e.target.value })} placeholder="Where to buy" />
             </div>
             <div className="space-y-2">
               <Label>Assigned to</Label>
@@ -381,7 +300,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
               </Select>
             </div>
             {eventId === undefined && (
-              <div className="col-span-2 space-y-2">
+              <div className="space-y-2">
                 <Label>Event</Label>
                 <Select value={form.event_id} onValueChange={(v) => setForm({ ...form, event_id: v })}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>

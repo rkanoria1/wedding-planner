@@ -49,7 +49,6 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
     vendor_name: "", event_id: "none",
     status: "not_booked" as BookingStatus,
     booking_date: "", contract_signed: false,
-    advance_paid: "", balance_due: "", final_payment_due: "",
     contact_person: "", contact_phone: "",
     trial_scheduled: "", fitting_date: "", notes: "",
   };
@@ -65,9 +64,6 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
         status: booking.status,
         booking_date: booking.booking_date ?? "",
         contract_signed: booking.contract_signed,
-        advance_paid: booking.advance_paid ? String(booking.advance_paid) : "",
-        balance_due: booking.balance_due ? String(booking.balance_due) : "",
-        final_payment_due: booking.final_payment_due ?? "",
         contact_person: booking.contact_person ?? "",
         contact_phone: booking.contact_phone ?? "",
         trial_scheduled: booking.trial_scheduled ?? "",
@@ -105,9 +101,6 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
       status: form.status,
       booking_date: form.booking_date || null,
       contract_signed: form.contract_signed,
-      advance_paid: Number(form.advance_paid) || 0,
-      balance_due: Number(form.balance_due) || 0,
-      final_payment_due: form.final_payment_due || null,
       contact_person: form.contact_person.trim() || null,
       contact_phone: form.contact_phone.trim() || null,
       trial_scheduled: showTrial ? form.trial_scheduled || null : null,
@@ -227,18 +220,6 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
             <div className="space-y-2">
               <Label>Booking date</Label>
               <Input type="date" value={form.booking_date} onChange={(e) => setForm({ ...form, booking_date: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Final payment due</Label>
-              <Input type="date" value={form.final_payment_due} onChange={(e) => setForm({ ...form, final_payment_due: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Advance paid (₹)</Label>
-              <Input type="number" min={0} value={form.advance_paid} onChange={(e) => setForm({ ...form, advance_paid: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Balance due (₹)</Label>
-              <Input type="number" min={0} value={form.balance_due} onChange={(e) => setForm({ ...form, balance_due: e.target.value })} />
             </div>
             {showTrial && (
               <div className="space-y-2">

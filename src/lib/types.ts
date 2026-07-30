@@ -81,11 +81,22 @@ export interface Task {
   status: TaskStatus;
   due_date: string | null;
   completion: number;
+  shared: boolean;
+  household: string | null;
   sort_order: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+}
+
+export interface Photo {
+  id: string;
+  event_id: string | null;
+  url: string;
+  caption: string | null;
+  uploaded_by: string | null;
+  created_at: string;
 }
 
 export interface TaskAssignee {

@@ -153,11 +153,6 @@ export function weeksRemaining(weddingDate: string): number {
 
 /* ————— formatters ————— */
 
-export function formatMoney(amount: number | null | undefined, currency = "₹"): string {
-  if (amount == null) return "—";
-  return `${currency}${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(amount)}`;
-}
-
 export function formatDate(date: string | null | undefined, fmt = "d MMM yyyy"): string {
   if (!date) return "—";
   try {

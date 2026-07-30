@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  CalendarCheck2, Gem, History, LayoutDashboard, ListChecks,
+  CalendarCheck2, Gem, History, Images, LayoutDashboard, ListChecks,
   LogOut, Music2, Plus, Settings, ShoppingBag, Store, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
@@ -22,6 +22,7 @@ const NAV = [
   { href: "/shopping", label: "Shopping", icon: ShoppingBag },
   { href: "/guests", label: "Guests", icon: Users },
   { href: "/performances", label: "Sangeet", icon: Music2 },
+  { href: "/gallery", label: "Moments", icon: Images },
   { href: "/vendors", label: "Vendors", icon: Store },
   { href: "/activity", label: "Activity", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },

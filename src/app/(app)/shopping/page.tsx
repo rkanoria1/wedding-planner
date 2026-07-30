@@ -10,9 +10,9 @@ function ShoppingPageInner() {
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div>
-        <h1 className="font-display text-3xl">Shopping Planner</h1>
+        <h1 className="font-display text-3xl">Shopping Checklist</h1>
         <p className="text-sm text-muted-foreground">
-          Everything the celebrations need — from lehengas to fairy lights.
+          Tick off what still needs to be bought — from lehengas to fairy lights.
         </p>
       </div>
       <ShoppingSection openNew={Boolean(params.get("new"))} />

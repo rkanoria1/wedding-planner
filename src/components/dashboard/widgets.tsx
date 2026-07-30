@@ -10,12 +10,12 @@ import {
 import { useWedding } from "@/lib/data-context";
 import type { Booking, Task } from "@/lib/types";
 import {
-  BOOKING_URGENCY_META, bookingStats, bookingUrgency, categoryMeta, isSecured,
+  bookingStats, bookingUrgency, categoryMeta, isSecured,
 } from "@/lib/bookings";
 import { CategoryIcon } from "@/components/bookings/category-icon";
 import {
   EVENT_THEMES, PRIORITY_META, URGENCY_META, bookingProgress, formatDate,
-  formatMoney, isOpen, shoppingProgress, taskListProgress, taskUrgency,
+  isOpen, shoppingProgress, taskListProgress, taskUrgency,
 } from "@/lib/wedding";
 import { EventIcon } from "@/components/shared/event-icon";
 import { GradientBar } from "@/components/shared/gradient-bar";
@@ -139,10 +139,9 @@ export function TodayWidget({ delay = 0 }: { delay?: number }) {
 /* —— shopping, booking —— */
 
 export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
-  const { shoppingItems, settings } = useWedding();
+  const { shoppingItems } = useWedding();
   const pct = shoppingProgress(shoppingItems);
   const bought = shoppingItems.filter((i) => i.purchased);
-  const spent = bought.reduce((s, i) => s + Number(i.actual_price ?? 0), 0);
 
   return (
     <WidgetCard
@@ -160,46 +159,44 @@ export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
           <span className="font-display text-2xl">
             {bought.length}/{shoppingItems.length}
           </span>
-          <span className="text-xs text-muted-foreground">items purchased</span>
+          <span className="text-xs text-muted-foreground">items bought</span>
         </div>
         <GradientBar value={pct} />
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Spent so far</span>
-          <span className="font-medium">{formatMoney(spent, settings.currency)}</span>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {shoppingItems.length - bought.length} still on the checklist
+        </p>
       </div>
     </WidgetCard>
   );
 }
 
 export function BookingWidget({ delay = 0 }: { delay?: number }) {
-  const { vendors, settings } = useWedding();
+  const { vendors } = useWedding();
   const pct = bookingProgress(vendors);
-  const advances = vendors.reduce((s, v) => s + Number(v.advance_paid), 0);
+  const booked = vendors.filter((v) => v.booked).length;
 
   return (
     <WidgetCard
-      title="Bookings"
+      title="Vendors"
       icon={<Store className="size-5 text-chart-4" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/vendors" />}>
-          Vendors <ArrowRight className="size-3.5" />
+          All <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-2xl">
-            {vendors.filter((v) => v.booked).length}/{vendors.length}
+            {booked}/{vendors.length}
           </span>
           <span className="text-xs text-muted-foreground">vendors booked</span>
         </div>
         <GradientBar value={pct} />
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Advances paid</span>
-          <span className="font-medium">{formatMoney(advances, settings.currency)}</span>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {vendors.length - booked} still exploring
+        </p>
       </div>
     </WidgetCard>
   );

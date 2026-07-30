@@ -148,8 +148,6 @@ export interface BookingStats {
   pending: number;
   overdue: number;
   progress: number; // % secured
-  advancePaid: number;
-  balanceDue: number;
 }
 
 export function bookingStats(bookings: Booking[], weddingDate: string): BookingStats {
@@ -166,8 +164,6 @@ export function bookingStats(bookings: Booking[], weddingDate: string): BookingS
     pending: active.length - secured.length,
     overdue: overdue.length,
     progress: active.length ? Math.round((secured.length / active.length) * 100) : 0,
-    advancePaid: active.reduce((s, b) => s + Number(b.advance_paid), 0),
-    balanceDue: active.reduce((s, b) => s + Number(b.balance_due), 0),
   };
 }
 

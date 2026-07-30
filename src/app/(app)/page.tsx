@@ -1,6 +1,7 @@
 "use client";
 
 import { CountdownHero } from "@/components/dashboard/countdown-hero";
+import { AdminCompare } from "@/components/dashboard/admin-compare";
 import {
   ActivityWidget, BookingStatusWidget, EventStatusStrip,
   GuestsWidget, OverdueBookingsBanner, QuickActions, QuickNotesWidget, ShoppingWidget,
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <CountdownHero />
+      <AdminCompare delay={0.06} />
       <OverdueBookingsBanner delay={0.08} />
       <QuickActions delay={0.1} />
       <EventStatusStrip delay={0.15} />

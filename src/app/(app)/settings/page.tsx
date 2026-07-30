@@ -37,14 +37,12 @@ function SettingsPageInner() {
     couple_names: settings.couple_names,
     wedding_date: settings.wedding_date,
     planning_start: settings.planning_start,
-    currency: settings.currency,
   });
   useEffect(() => {
     setGeneral({
       couple_names: settings.couple_names,
       wedding_date: settings.wedding_date,
       planning_start: settings.planning_start,
-      currency: settings.currency,
     });
   }, [settings]);
 
@@ -131,13 +129,6 @@ function SettingsPageInner() {
                 <Input
                   type="date" value={general.planning_start} disabled={!isAdmin}
                   onChange={(e) => setGeneral({ ...general, planning_start: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Currency symbol</Label>
-                <Input
-                  value={general.currency} disabled={!isAdmin} maxLength={4}
-                  onChange={(e) => setGeneral({ ...general, currency: e.target.value })}
                 />
               </div>
               {isAdmin && (
