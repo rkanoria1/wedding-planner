@@ -32,6 +32,12 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/login") || path.startsWith("/admin");
+  const isLogoutRoute = path === "/logout" || path.startsWith("/logout/");
+
+  // Always allow logout to run (guests would otherwise be bounced to /welcome)
+  if (isLogoutRoute) {
+    return response;
+  }
 
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
