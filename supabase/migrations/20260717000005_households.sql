@@ -15,8 +15,8 @@ create table if not exists public.households (
 );
 
 insert into public.households (id, app_title, greeting_name, couple_names, sort_order) values
-  ('rahul', 'Rahul''s Wedding', 'Rahul', 'Rahul & Somya', 1),
-  ('somya', 'Somya''s Wedding', 'Somya', 'Somya & Rahul', 2)
+  ('rahul', 'Rahul''s Wedding', 'Kanorias', 'Rahul & Somya', 1),
+  ('somya', 'Somya''s Wedding', 'Sarafs', 'Somya & Rahul', 2)
 on conflict (id) do nothing;
 
 alter table public.households enable row level security;

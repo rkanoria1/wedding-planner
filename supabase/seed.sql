@@ -81,40 +81,6 @@ insert into public.vendors (id, name, category, phone, total_amount, advance_pai
   ('b0000000-0000-0000-0000-000000000007', 'The Imperial Gardens',   'Venue',          '+919820011007', 1500000, 500000, true, 5, 'Nikah venue. Includes valet + generators.'),
   ('b0000000-0000-0000-0000-000000000008', 'Noor Jewels',            'Jeweler',        '+919820011008', 2200000, 800000, true, 5, 'Polki set + gold kadas. Final fitting in Nov.');
 
--- ---------- budgets ----------
-insert into public.budgets (event_id, category, allocated) values
-  ('e0000000-0000-0000-0000-000000000001', 'Decorations', 150000),
-  ('e0000000-0000-0000-0000-000000000001', 'Food',        200000),
-  ('e0000000-0000-0000-0000-000000000001', 'Mehendi Artist', 60000),
-  ('e0000000-0000-0000-0000-000000000001', 'Clothes',     100000),
-  ('e0000000-0000-0000-0000-000000000002', 'Decorations', 80000),
-  ('e0000000-0000-0000-0000-000000000002', 'Food',        100000),
-  ('e0000000-0000-0000-0000-000000000003', 'Venue',       1500000),
-  ('e0000000-0000-0000-0000-000000000003', 'Catering',    700000),
-  ('e0000000-0000-0000-0000-000000000003', 'Jewelry',     2500000),
-  ('e0000000-0000-0000-0000-000000000003', 'Clothes',     600000),
-  ('e0000000-0000-0000-0000-000000000003', 'Photography', 350000),
-  ('e0000000-0000-0000-0000-000000000004', 'Venue',       900000),
-  ('e0000000-0000-0000-0000-000000000004', 'Catering',    500000),
-  ('e0000000-0000-0000-0000-000000000004', 'Lighting',    120000),
-  (null,                                    'Wedding Cards', 80000),
-  (null,                                    'Return Gifts',  150000);
-
--- ---------- expenses ----------
-insert into public.expenses (event_id, vendor_id, category, description, amount, kind, paid, paid_on) values
-  ('e0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000007', 'Venue',       'Imperial Gardens booking advance',      500000, 'advance', true,  '2026-06-20'),
-  ('e0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000003', 'Catering',    'Zaika caterers advance',                300000, 'advance', true,  '2026-06-25'),
-  ('e0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000008', 'Jewelry',     'Polki bridal set advance',              800000, 'advance', true,  '2026-07-01'),
-  ('e0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001', 'Photography', 'Photography package advance',           100000, 'advance', true,  '2026-07-05'),
-  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000005', 'Mehendi Artist', 'Henna by Farah booking',             15000,  'advance', true,  '2026-07-08'),
-  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', 'Decorations', 'Mehendi decor advance',                 50000,  'advance', true,  '2026-07-10'),
-  ('e0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000002', 'Decorations', 'Haldi marigold decor advance',          30000,  'advance', true,  '2026-07-10'),
-  ('e0000000-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000002', 'Decorations', 'Reception decor advance',               120000, 'advance', true,  '2026-07-12'),
-  (null, null, 'Wedding Cards', 'Sample invitation cards (3 designs)',                            4500,   'expense', true,  '2026-07-06'),
-  ('e0000000-0000-0000-0000-000000000003', null, 'Clothes', 'Sherwani fabric — Raymond',          38000,  'expense', true,  '2026-07-11'),
-  ('e0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000004', 'Makeup',     'Makeup artist advance',                  50000,  'advance', true,  '2026-07-13'),
-  ('e0000000-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000003', 'Catering',   'Reception catering balance (due Dec)',   400000, 'vendor_payment', false, '2026-12-15');
-
 -- ---------- tasks ----------
 insert into public.tasks (id, event_id, name, description, category, priority, status, due_date, completion, created_by, sort_order) values
   -- Nikah

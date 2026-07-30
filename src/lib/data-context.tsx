@@ -15,11 +15,9 @@ import type {
   ActivityEntry,
   AppSettings,
   Booking,
-  Budget,
   ChecklistItem,
   EventFile,
   EventMember,
-  Expense,
   Guest,
   Household,
   Note,
@@ -50,9 +48,7 @@ interface WeddingData {
   checklistItems: ChecklistItem[];
   comments: TaskComment[];
   shoppingItems: ShoppingItem[];
-  budgets: Budget[];
   vendors: Vendor[];
-  expenses: Expense[];
   guests: Guest[];
   bookings: Booking[];
   performances: Performance[];
@@ -83,9 +79,7 @@ type TableName =
   | "task_checklist_items"
   | "task_comments"
   | "shopping_items"
-  | "budgets"
   | "vendors"
-  | "expenses"
   | "guests"
   | "bookings"
   | "performances"
@@ -100,7 +94,6 @@ const TABLE_ORDER: Partial<Record<TableName, { column: string; ascending: boolea
   task_checklist_items: { column: "sort_order", ascending: true },
   task_comments: { column: "created_at", ascending: true },
   shopping_items: { column: "created_at", ascending: true },
-  expenses: { column: "paid_on", ascending: false },
   guests: { column: "name", ascending: true },
   vendors: { column: "name", ascending: true },
   bookings: { column: "sort_order", ascending: true },
@@ -130,9 +123,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     task_checklist_items: [],
     task_comments: [],
     shopping_items: [],
-    budgets: [],
     vendors: [],
-    expenses: [],
     guests: [],
     bookings: [],
     performances: [],
@@ -171,7 +162,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
         return;
       }
       await Promise.all((Object.keys(TABLE_ORDER) as TableName[])
-        .concat(["profiles", "app_settings", "event_members", "task_assignees", "budgets"])
+        .concat(["profiles", "app_settings", "event_members", "task_assignees"])
         .filter((t, i, arr) => arr.indexOf(t) === i)
         .map((t) => refresh(t)));
       if (!cancelled) setLoading(false);
@@ -195,7 +186,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     const tables: TableName[] = [
       "profiles", "app_settings", "events", "event_members", "tasks",
       "task_assignees", "task_checklist_items", "task_comments", "shopping_items",
-      "budgets", "vendors", "expenses", "guests", "bookings", "performances", "notifications",
+      "vendors", "guests", "bookings", "performances", "notifications",
       "activity_log", "notes", "event_files",
     ];
     const channel = db.channel("wedding-realtime");
@@ -278,9 +269,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     checklistItems: rows.task_checklist_items as ChecklistItem[],
     comments: rows.task_comments as TaskComment[],
     shoppingItems: rows.shopping_items as ShoppingItem[],
-    budgets: rows.budgets as Budget[],
     vendors: rows.vendors as Vendor[],
-    expenses: rows.expenses as Expense[],
     guests: rows.guests as Guest[],
     bookings: rows.bookings as Booking[],
     performances: rows.performances as Performance[],

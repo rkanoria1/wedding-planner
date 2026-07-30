@@ -71,7 +71,7 @@ export default function LoginPage() {
             beautifully <em className="text-amber-200">planned</em>.
           </h1>
           <p className="mt-6 max-w-md text-white/75">
-            Myrah to Phera — tasks, budgets, guests and vendors for the whole
+            Myrah to Phera — tasks, guests, shopping and vendors for the whole
             family, in one elegant place.
           </p>
         </motion.div>

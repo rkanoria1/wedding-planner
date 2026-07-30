@@ -10,7 +10,6 @@ export type TaskPriority = "critical" | "high" | "medium" | "low";
 export type RsvpStatus = "pending" | "confirmed" | "declined" | "maybe";
 export type GuestSide = "bride" | "groom" | "both";
 export type GuestGroup = "family" | "friends" | "vip";
-export type PaymentKind = "expense" | "advance" | "vendor_payment";
 
 export interface Household {
   id: string;
@@ -126,13 +125,6 @@ export interface ShoppingItem {
   created_at: string;
 }
 
-export interface Budget {
-  id: string;
-  event_id: string | null;
-  category: string;
-  allocated: number;
-}
-
 export interface Vendor {
   id: string;
   name: string;
@@ -143,19 +135,6 @@ export interface Vendor {
   booked: boolean;
   rating: number | null;
   notes: string | null;
-  created_at: string;
-}
-
-export interface Expense {
-  id: string;
-  event_id: string | null;
-  vendor_id: string | null;
-  category: string;
-  description: string;
-  amount: number;
-  kind: PaymentKind;
-  paid: boolean;
-  paid_on: string | null;
   created_at: string;
 }
 

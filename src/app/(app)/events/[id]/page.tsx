@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import {
-  EVENT_THEMES, STATUS_META, fireConfetti, formatDate, formatMoney,
+  EVENT_THEMES, STATUS_META, fireConfetti, formatDate,
   isOpen, shoppingProgress, taskListProgress,
 } from "@/lib/wedding";
 import { EventIcon } from "@/components/shared/event-icon";
@@ -23,7 +23,6 @@ import {
 } from "@/components/events/event-sections";
 import { KanbanBoard } from "@/components/tasks/kanban";
 import { TaskSheet } from "@/components/tasks/task-sheet";
-import { BudgetSection } from "@/components/budget/budget-section";
 import { ShoppingSection } from "@/components/shopping/shopping-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function EventPage() {
   const { id } = useParams<{ id: string }>();
   const {
-    isAdmin, events, tasks, shoppingItems, expenses, budgets, profiles, eventMembers,
+    isAdmin, events, tasks, shoppingItems, profiles, eventMembers,
   } = useWedding();
 
   const event = events.find((e) => e.id === id);
@@ -69,12 +68,6 @@ export default function EventPage() {
     eventMembers.some((m) => m.event_id === event.id && m.profile_id === p.id)
   );
   const evShopping = shoppingItems.filter((s) => s.event_id === event.id);
-  const evSpent = expenses
-    .filter((e) => e.event_id === event.id && e.paid)
-    .reduce((s, e) => s + Number(e.amount), 0);
-  const evAllocated = budgets
-    .filter((b) => b.event_id === event.id)
-    .reduce((s, b) => s + Number(b.allocated), 0);
   const daysToGo = event.event_date
     ? differenceInCalendarDays(parseISO(event.event_date), new Date())
     : null;
@@ -150,14 +143,13 @@ export default function EventPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="shopping">Shopping</TabsTrigger>
-          <TabsTrigger value="budget">Budget</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Card className="card-lux shadow-none">
               <CardContent className="pt-6">
                 <p className="text-xs text-muted-foreground">Tasks completed</p>
@@ -165,19 +157,6 @@ export default function EventPage() {
                   {evTasks.filter((t) => t.status === "completed").length}/{evTasks.length}
                 </p>
                 <GradientBar value={progress} className="mt-2" />
-              </CardContent>
-            </Card>
-            <Card className="card-lux shadow-none">
-              <CardContent className="pt-6">
-                <p className="text-xs text-muted-foreground">Budget spent</p>
-                <p className="font-display text-2xl">{formatMoney(evSpent)}</p>
-                <GradientBar
-                  value={evAllocated ? Math.min(100, Math.round((evSpent / evAllocated) * 100)) : 0}
-                  className="mt-2"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  of {formatMoney(evAllocated)} allocated
-                </p>
               </CardContent>
             </Card>
             <Card className="card-lux shadow-none">
@@ -250,10 +229,6 @@ export default function EventPage() {
 
         <TabsContent value="shopping" className="mt-4">
           <ShoppingSection eventId={event.id} />
-        </TabsContent>
-
-        <TabsContent value="budget" className="mt-4">
-          <BudgetSection eventId={event.id} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-4">

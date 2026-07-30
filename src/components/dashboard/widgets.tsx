@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { formatDistanceToNow, isToday, parseISO } from "date-fns";
 import {
   ArrowRight, CalendarCheck2, CalendarClock, CheckCircle2, Flame, History,
-  PiggyBank, Plus, ShoppingBag, StickyNote, Store, TriangleAlert, Users, Wallet,
+  Plus, ShoppingBag, StickyNote, Store, TriangleAlert, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import type { Booking, Task } from "@/lib/types";
@@ -136,52 +136,7 @@ export function TodayWidget({ delay = 0 }: { delay?: number }) {
   );
 }
 
-/* —— money, shopping, booking —— */
-
-export function BudgetWidget({ delay = 0 }: { delay?: number }) {
-  const { budgets, expenses, settings } = useWedding();
-  const allocated = budgets.reduce((s, b) => s + Number(b.allocated), 0);
-  const spent = expenses.filter((e) => e.paid).reduce((s, e) => s + Number(e.amount), 0);
-  const pending = expenses.filter((e) => !e.paid).reduce((s, e) => s + Number(e.amount), 0);
-  const pct = allocated > 0 ? Math.round((spent / allocated) * 100) : 0;
-
-  return (
-    <WidgetCard
-      title="Budget"
-      icon={<Wallet className="size-5 text-primary" />}
-      delay={delay}
-      action={
-        <Button variant="ghost" size="sm" render={<Link href="/budget" />}>
-          Details <ArrowRight className="size-3.5" />
-        </Button>
-      }
-    >
-      <div className="space-y-3">
-        <div>
-          <div className="flex items-baseline justify-between">
-            <span className="font-display text-2xl">{formatMoney(spent, settings.currency)}</span>
-            <span className="text-xs text-muted-foreground">
-              of {formatMoney(allocated, settings.currency)}
-            </span>
-          </div>
-          <GradientBar value={pct} className="mt-2" />
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Remaining</span>
-          <span className="font-medium">{formatMoney(Math.max(0, allocated - spent), settings.currency)}</span>
-        </div>
-        {pending > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Pending payments</span>
-            <span className="font-medium text-orange-600 dark:text-orange-400">
-              {formatMoney(pending, settings.currency)}
-            </span>
-          </div>
-        )}
-      </div>
-    </WidgetCard>
-  );
-}
+/* —— shopping, booking —— */
 
 export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
   const { shoppingItems, settings } = useWedding();
@@ -300,13 +255,15 @@ export function EventStatusStrip({ delay = 0 }: { delay?: number }) {
         const theme = EVENT_THEMES[event.theme] ?? EVENT_THEMES.emerald;
         return (
           <Link key={event.id} href={`/events/${event.id}`} className="group">
-            <div className={`card-lux overflow-hidden`}>
-              <div className={`${theme.gradient} relative flex h-24 items-end p-4 text-white`}>
+            <div className="card-lux overflow-hidden transition-transform duration-300 group-hover:-translate-y-1">
+              <div className={`${theme.gradient} relative flex h-24 items-end overflow-hidden p-4 text-white`}>
+                {/* shine sweep on hover */}
+                <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-white/25 blur-md transition-all duration-700 ease-out group-hover:left-[150%]" />
                 <EventIcon
                   name={event.icon}
                   className="absolute right-3 top-3 size-8 opacity-40 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
                 />
-                <div>
+                <div className="relative">
                   <p className="font-display text-xl drop-shadow">{event.name}</p>
                   <p className="text-xs text-white/85">{formatDate(event.event_date, "EEE, d MMM yyyy")}</p>
                 </div>
@@ -411,7 +368,6 @@ export function QuickActions({ delay = 0 }: { delay?: number }) {
     { href: "/tasks?new=1", label: "New task", icon: Plus },
     { href: "/bookings?new=1", label: "Add booking", icon: CalendarCheck2 },
     { href: "/shopping?new=1", label: "Shopping item", icon: ShoppingBag },
-    { href: "/budget?new=1", label: "Add expense", icon: PiggyBank },
     { href: "/guests?new=1", label: "Add guest", icon: Users },
     { href: "/vendors?new=1", label: "Add vendor", icon: Store },
   ];

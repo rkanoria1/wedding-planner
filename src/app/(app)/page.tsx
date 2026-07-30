@@ -2,7 +2,7 @@
 
 import { CountdownHero } from "@/components/dashboard/countdown-hero";
 import {
-  ActivityWidget, BookingStatusWidget, BudgetWidget, EventStatusStrip,
+  ActivityWidget, BookingStatusWidget, EventStatusStrip,
   GuestsWidget, OverdueBookingsBanner, QuickActions, QuickNotesWidget, ShoppingWidget,
   TodayWidget, UrgentTasksWidget,
 } from "@/components/dashboard/widgets";
@@ -20,8 +20,7 @@ export default function DashboardPage() {
         <TodayWidget delay={0.25} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <BudgetWidget delay={0.3} />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <ShoppingWidget delay={0.35} />
         <BookingStatusWidget delay={0.4} />
         <GuestsWidget delay={0.45} />

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3, CalendarCheck2, Gem, History, LayoutDashboard, ListChecks,
-  LogOut, Music2, Plus, Settings, ShoppingBag, Store, Users, Wallet,
+  CalendarCheck2, Gem, History, LayoutDashboard, ListChecks,
+  LogOut, Music2, Plus, Settings, ShoppingBag, Store, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { daysRemaining, taskListProgress } from "@/lib/wedding";
@@ -20,11 +20,9 @@ const NAV = [
   { href: "/tasks", label: "Tasks", icon: ListChecks },
   { href: "/bookings", label: "Bookings", icon: CalendarCheck2 },
   { href: "/shopping", label: "Shopping", icon: ShoppingBag },
-  { href: "/budget", label: "Budget", icon: Wallet },
   { href: "/guests", label: "Guests", icon: Users },
   { href: "/performances", label: "Sangeet", icon: Music2 },
   { href: "/vendors", label: "Vendors", icon: Store },
-  { href: "/analytics", label: "Insights", icon: BarChart3 },
   { href: "/activity", label: "Activity", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

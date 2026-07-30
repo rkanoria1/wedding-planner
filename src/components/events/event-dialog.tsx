@@ -218,7 +218,7 @@ export function EventDialog({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete {event?.name}?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      All its tasks, shopping items, budgets and expenses will be deleted too.
+                      All its tasks, shopping items and notes will be deleted too.
                       Consider archiving instead.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
