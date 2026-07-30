@@ -11,10 +11,11 @@ import { useWedding } from "@/lib/data-context";
 import type { Booking } from "@/lib/types";
 import {
   BOOKING_STATUS_META, BOOKING_URGENCY_META, bookingStats, bookingUrgency,
-  categoryMeta, isSecured, upcomingMilestones, urgencyRank,
+  categoryMeta, idealBookByDate, isSecured, upcomingMilestones, urgencyRank,
 } from "@/lib/bookings";
 import { formatDate, formatMoney, whatsappLink } from "@/lib/wedding";
 import { ProgressRing } from "@/components/shared/progress-ring";
+import { ShareWhatsApp, PrintButton } from "@/components/shared/share-print";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BookingDialog } from "@/components/bookings/booking-dialog";
 import { CategoryBoard } from "@/components/bookings/category-board";
@@ -74,6 +75,21 @@ function BookingsPageInner() {
   const openEdit = (booking: Booking) => setDialog({ open: true, booking });
   const openAdd = (category?: string) => setDialog({ open: true, booking: null, category });
 
+  // WhatsApp summary of everything still to be booked
+  const pendingShareText = useMemo(() => {
+    const pending = sortedBookings.filter((b) => b.status !== "cancelled" && !isSecured(b.status));
+    const lines = pending.map((b) => {
+      const u = BOOKING_URGENCY_META[bookingUrgency(b, weddingDate)].label;
+      const by = formatDate(idealBookByDate(b.category, weddingDate).toISOString(), "d MMM");
+      return `• ${b.category}${b.vendor_name ? ` (${b.vendor_name})` : ""} — ${u}, book by ${by}`;
+    });
+    return (
+      `💍 Wedding vendor bookings — still to confirm\n\n` +
+      (lines.length ? lines.join("\n") : "All vendors are booked! 🎉") +
+      `\n\nSecured ${stats.secured}/${stats.total}. Wedding on ${formatDate(weddingDate, "d MMM yyyy")}.`
+    );
+  }, [sortedBookings, weddingDate, stats]);
+
   const statTiles = [
     { label: "Bookings needed", value: stats.total, icon: ClipboardList, tint: "text-primary", bg: "bg-primary/10" },
     { label: "Confirmed", value: stats.confirmed, icon: BadgeCheck, tint: "text-primary", bg: "bg-primary/10" },
@@ -109,11 +125,15 @@ function BookingsPageInner() {
               Each essential service has a typical lead time. We flag what needs booking
               now so nothing slips before {formatDate(weddingDate, "d MMM yyyy")}.
             </p>
-            {isAdmin && (
-              <Button className="mt-4" onClick={() => openAdd()}>
-                <Plus className="size-4" /> Add booking
-              </Button>
-            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {isAdmin && (
+                <Button onClick={() => openAdd()}>
+                  <Plus className="size-4" /> Add booking
+                </Button>
+              )}
+              <ShareWhatsApp text={pendingShareText} label="Share pending" />
+              <PrintButton />
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-4">
             <ProgressRing

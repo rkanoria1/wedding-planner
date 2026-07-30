@@ -183,6 +183,12 @@ export function whatsappLink(phone: string, message?: string): string {
   return `https://wa.me/${digits}${text}`;
 }
 
+/** Share arbitrary text to WhatsApp — opens the chooser so the user can
+ * pick the family group. No phone number needed. */
+export function whatsappShare(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
 /* ————— confetti ————— */
 
 export async function fireConfetti(big = false) {

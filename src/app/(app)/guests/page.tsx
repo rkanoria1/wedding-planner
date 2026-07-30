@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Guest, GuestGroup, GuestSide, RsvpStatus } from "@/lib/types";
 import { EVENT_THEMES, whatsappLink } from "@/lib/wedding";
+import { ShareWhatsApp, PrintButton } from "@/components/shared/share-print";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -172,11 +173,25 @@ function GuestsPageInner() {
             The people who make it a celebration.
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={openAdd}>
-            <Plus className="size-4" /> Add guest
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {isAdmin && (
+            <Button onClick={openAdd}>
+              <Plus className="size-4" /> Add guest
+            </Button>
+          )}
+          <ShareWhatsApp
+            label="Share headcount"
+            text={
+              `👰 Guest headcount\n\n` +
+              `Total invited: ${totals.totalHeads} heads · Confirmed: ${totals.confirmedHeads}\n\n` +
+              `Per function:\n` +
+              perFunction
+                .map((p) => `• ${p.event.name} — ${p.invitedHeads} invited (${p.confirmedHeads} confirmed)`)
+                .join("\n")
+            }
+          />
+          <PrintButton label="Print list" />
+        </div>
       </div>
 
       {/* stats */}

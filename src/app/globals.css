@@ -201,6 +201,19 @@
   .bg-event-sunset    { background-image: linear-gradient(135deg, #7c2d12, #d1571f 55%, #f59e0b); }
   .bg-event-lavender  { background-image: linear-gradient(135deg, #4c1d95, #7c5cbf 55%, #c4b5fd); }
 
+  /* clean printing: strip app chrome, black-on-white, hand to elders */
+  @media print {
+    aside, header, nav.fixed, .no-print { display: none !important; }
+    main { padding: 0 !important; }
+    .lg\:pl-64 { padding-left: 0 !important; }
+    body, .bg-celebration, .card-lux {
+      background: #fff !important;
+      color: #111 !important;
+    }
+    .card-lux { border: 1px solid #ddd !important; box-shadow: none !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
   .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);

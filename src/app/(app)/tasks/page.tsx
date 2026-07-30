@@ -8,7 +8,8 @@ import {
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { TaskPriority, TaskStatus } from "@/lib/types";
-import { PRIORITY_META, STATUS_META, STATUS_ORDER, isOpen, taskUrgency } from "@/lib/wedding";
+import { PRIORITY_META, STATUS_META, STATUS_ORDER, formatDate, isOpen, taskUrgency } from "@/lib/wedding";
+import { ShareWhatsApp } from "@/components/shared/share-print";
 import { TaskSheet } from "@/components/tasks/task-sheet";
 import { KanbanBoard } from "@/components/tasks/kanban";
 import { TaskCalendar, TaskList, TaskTable } from "@/components/tasks/task-views";
@@ -77,6 +78,22 @@ function TasksPageInner() {
     });
   }, [tasks, q, eventFilter, assigneeFilter, priorityFilter, statusFilter, taskAssignees]);
 
+  // WhatsApp summary of what's still open, soonest first
+  const todoShareText = useMemo(() => {
+    const open = tasks
+      .filter(isOpen)
+      .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
+      .slice(0, 20);
+    const lines = open.map(
+      (t) => `• ${t.name}${t.due_date ? ` — due ${formatDate(t.due_date, "d MMM")}` : ""}`
+    );
+    return (
+      `✅ Wedding to-dos\n\n` +
+      (lines.length ? lines.join("\n") : "All caught up! 🎉") +
+      (open.length < tasks.filter(isOpen).length ? `\n…and more in the app.` : "")
+    );
+  }, [tasks]);
+
   async function bulkUpdate(field: "status" | "priority", value: TaskStatus | TaskPriority) {
     const { error } = await db.from("tasks").update({ [field]: value }).in("id", selected);
     if (error) return toast.error(error.message);
@@ -114,6 +131,7 @@ function TasksPageInner() {
               <TabsTrigger value="calendar" aria-label="Calendar"><CalendarDays className="size-4" /></TabsTrigger>
             </TabsList>
           </Tabs>
+          <ShareWhatsApp text={todoShareText} label="Share" />
           {isAdmin && (
             <Button onClick={() => setOpenTask("new")}>
               <Plus className="size-4" /> New task
