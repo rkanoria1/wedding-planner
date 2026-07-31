@@ -7,6 +7,21 @@
  * Safe by design: returns the ORIGINAL file if it's not a compressible raster
  * image (gif/svg), if the result wouldn't be smaller, or if anything fails.
  */
+let webpOk: boolean | null = null;
+/** Does this browser encode WebP via canvas? (Safari <16 does not.) */
+function supportsWebp(): boolean {
+  if (webpOk !== null) return webpOk;
+  try {
+    const c = document.createElement("canvas");
+    c.width = 1;
+    c.height = 1;
+    webpOk = c.toDataURL("image/webp").startsWith("data:image/webp");
+  } catch {
+    webpOk = false;
+  }
+  return webpOk;
+}
+
 export async function compressImage(
   file: File,
   opts: { maxEdge?: number; quality?: number } = {}
@@ -38,14 +53,19 @@ export async function compressImage(
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close?.();
 
+    // WebP is ~25–30% smaller than JPEG; fall back to JPEG where unsupported
+    const useWebp = supportsWebp();
+    const mime = useWebp ? "image/webp" : "image/jpeg";
+    const ext = useWebp ? "webp" : "jpg";
+
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", quality)
+      canvas.toBlob(resolve, mime, quality)
     );
     // don't bother if compression didn't actually help
     if (!blob || blob.size >= file.size) return file;
 
     const base = file.name.replace(/\.[^.]+$/, "") || "photo";
-    return new File([blob], `${base}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+    return new File([blob], `${base}.${ext}`, { type: mime, lastModified: Date.now() });
   } catch {
     return file;
   }

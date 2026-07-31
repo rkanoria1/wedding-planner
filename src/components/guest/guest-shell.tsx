@@ -119,7 +119,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
           </p>
           <Input
             autoFocus
-            placeholder="e.g. Aunt Meera"
+            placeholder="e.g. Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && saveName()}
