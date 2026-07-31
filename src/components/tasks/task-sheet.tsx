@@ -48,7 +48,7 @@ interface TaskSheetProps {
 export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
   const {
     db, me, isAdmin, tasks, events, profiles, taskAssignees, checklistItems,
-    comments, refresh, logActivity, notify,
+    comments, refresh, logActivity, notify, writeHousehold,
   } = useWedding();
 
   const isNew = taskId === "new";
@@ -139,7 +139,14 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
     if (isNew) {
       const { data, error } = await db
         .from("tasks")
-        .insert({ ...payload, created_by: me?.id })
+        .insert({
+          ...payload,
+          created_by: me?.id,
+          // a super-admin has no household of their own, so file the task
+          // under whichever family they're viewing (otherwise it lands
+          // unassigned and vanishes from that family's list)
+          ...(writeHousehold ? { household: writeHousehold } : {}),
+        })
         .select("id")
         .single();
       if (error) {

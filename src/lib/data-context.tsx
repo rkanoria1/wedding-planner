@@ -45,6 +45,8 @@ interface WeddingData {
   isGuest: boolean;
   isSuperadmin: boolean;
   viewHousehold: "rahul" | "somya" | "all";
+  /** Household to stamp on newly created rows (null = let the DB decide). */
+  writeHousehold: string | null;
   setViewHousehold: (h: "rahul" | "somya" | "all") => void;
   loading: boolean;
   settings: AppSettings;
@@ -267,9 +269,22 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     <T,>(arr: T[]): T[] =>
       activeView === "all"
         ? arr
-        : arr.filter((r) => (r as { household?: string | null }).household === activeView),
+        : arr.filter((r) => {
+            const hh = (r as { household?: string | null }).household;
+            // keep unassigned rows visible — otherwise anything created while
+            // no family was selected silently disappears from every view
+            return hh === activeView || hh == null;
+          }),
     [activeView]
   );
+
+  /**
+   * Household that newly created rows should belong to. Family accounts get
+   * theirs from the DB trigger; a super-admin has none, so stamp whichever
+   * family they're currently viewing.
+   */
+  const writeHousehold =
+    isSuperadmin && viewHousehold !== "all" ? viewHousehold : me?.household ?? null;
 
   const branding = useMemo(() => {
     const effectiveId = isSuperadmin ? (viewHousehold === "all" ? null : viewHousehold) : me?.household;
@@ -320,6 +335,7 @@ export function WeddingDataProvider({ children }: { children: React.ReactNode })
     isGuest: me?.role === "guest",
     isSuperadmin,
     viewHousehold,
+    writeHousehold,
     setViewHousehold,
     loading,
     settings: (rows.app_settings[0] as AppSettings) ?? DEFAULT_SETTINGS,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarCheck2, Gem, History, Images, LayoutDashboard, ListChecks,
-  LogOut, Music2, PhoneCall, Plus, Settings, ShoppingBag, Store, Users,
+  LogOut, Music2, PhoneCall, Plus, QrCode, Settings, ShoppingBag, Store, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { daysRemaining, taskListProgress } from "@/lib/wedding";
@@ -25,6 +25,7 @@ const NAV = [
   { href: "/gallery", label: "Moments", icon: Images },
   { href: "/vendors", label: "Vendors", icon: Store },
   { href: "/contacts", label: "Contacts", icon: PhoneCall },
+  { href: "/invite", label: "Guest Invite", icon: QrCode },
   { href: "/activity", label: "Activity", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

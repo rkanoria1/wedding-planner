@@ -31,9 +31,20 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
   const items = checklistItems.filter((c) => c.task_id === task.id);
 
   return (
-    <button
+    // NOTE: deliberately a div, not a <button>. @hello-pangea/dnd refuses to
+    // start a drag when the gesture begins on an interactive tag (input,
+    // button, select…), which silently broke dragging cards between columns.
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onOpen(task.id)}
-      className="card-lux w-full space-y-2.5 p-3.5 text-left"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(task.id);
+        }
+      }}
+      className="card-lux w-full cursor-pointer space-y-2.5 p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug">{task.name}</p>
@@ -76,6 +87,6 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
           {assignees.length > 0 && <MemberAvatars profiles={assignees} max={3} />}
         </div>
       </div>
-    </button>
+    </div>
   );
 }

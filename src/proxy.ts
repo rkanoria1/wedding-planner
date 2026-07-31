@@ -33,9 +33,12 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/login") || path.startsWith("/admin");
   const isLogoutRoute = path === "/logout" || path.startsWith("/logout/");
+  // QR "scan to enter" links sign the visitor in themselves
+  const isInviteRoute = path.startsWith("/g/");
 
-  // Always allow logout to run (guests would otherwise be bounced to /welcome)
-  if (isLogoutRoute) {
+  // Always allow these to run (guests would otherwise be bounced to /welcome,
+  // and signed-out scanners would be bounced to /login before the code is read)
+  if (isLogoutRoute || isInviteRoute) {
     return response;
   }
 

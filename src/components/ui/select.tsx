@@ -10,9 +10,36 @@ type SelectProps = Omit<SelectPrimitive.Root.Props<string>, "onValueChange"> & {
   onValueChange?: (value: string) => void
 }
 
-function Select({ onValueChange, ...props }: SelectProps) {
+/**
+ * Base UI needs an `items` map (value -> label) for <Select.Value> to render a
+ * human-readable label; without it the trigger shows the raw value — e.g. an
+ * event's UUID instead of "Haldi", or "all" instead of "All events".
+ * Rather than hand-maintain that map at every call site, derive it by walking
+ * the <SelectItem> children.
+ */
+function collectItems(
+  node: React.ReactNode,
+  acc: Record<string, React.ReactNode>
+): Record<string, React.ReactNode> {
+  React.Children.forEach(node, (child) => {
+    if (!React.isValidElement(child)) return
+    const props = child.props as { value?: unknown; children?: React.ReactNode }
+    if (typeof props.value === "string" && props.children !== undefined) {
+      acc[props.value] = props.children
+    }
+    if (props.children) collectItems(props.children, acc)
+  })
+  return acc
+}
+
+function Select({ onValueChange, children, items, ...props }: SelectProps) {
+  const derived = React.useMemo(
+    () => items ?? collectItems(children, {}),
+    [items, children]
+  )
   return (
     <SelectPrimitive.Root
+      items={derived}
       onValueChange={
         onValueChange
           ? (value: unknown) => {
@@ -21,7 +48,9 @@ function Select({ onValueChange, ...props }: SelectProps) {
           : undefined
       }
       {...props}
-    />
+    >
+      {children}
+    </SelectPrimitive.Root>
   )
 }
 
