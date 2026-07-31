@@ -7,6 +7,7 @@ import { useWedding } from "@/lib/data-context";
 import type { Photo } from "@/lib/types";
 import { getGuestDisplayName } from "@/lib/guest";
 import { storageKey } from "@/lib/storage";
+import { compressImage } from "@/lib/image";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -26,8 +27,9 @@ export default function GuestMomentsPage() {
     const author = getGuestDisplayName();
     if (!author) return toast.error("Please set your name first");
     setBusy(true);
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/")) continue;
+    for (const original of Array.from(files)) {
+      if (!original.type.startsWith("image/")) continue;
+      const file = await compressImage(original);
       const path = storageKey("gallery/guest", file.name);
       const { error: upErr } = await db.storage
         .from("wedding-files")
@@ -36,7 +38,7 @@ export default function GuestMomentsPage() {
       const { data } = db.storage.from("wedding-files").getPublicUrl(path);
       const { error } = await db.from("photos").insert({
         url: data.publicUrl,
-        caption: file.name.replace(/\.[^.]+$/, ""),
+        caption: original.name.replace(/\.[^.]+$/, ""),
         uploaded_by: me?.id ?? null,
         source: "guest",
         author_label: author,

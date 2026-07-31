@@ -8,6 +8,7 @@ import { useWedding } from "@/lib/data-context";
 import type { Photo } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
 import { storageKey } from "@/lib/storage";
+import { compressImage } from "@/lib/image";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -37,8 +38,9 @@ export default function GalleryPage() {
   async function upload(files: FileList) {
     setBusy(true);
     let added = 0;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/")) continue;
+    for (const original of Array.from(files)) {
+      if (!original.type.startsWith("image/")) continue;
+      const file = await compressImage(original);
       const path = storageKey("gallery", file.name);
       const { error: upErr } = await db.storage
         .from("wedding-files")
@@ -48,7 +50,7 @@ export default function GalleryPage() {
       const { error: insErr } = await db.from("photos").insert({
         url: data.publicUrl,
         event_id: uploadEvent === "all" ? null : uploadEvent,
-        caption: file.name.replace(/\.[^.]+$/, ""),
+        caption: original.name.replace(/\.[^.]+$/, ""),
         uploaded_by: me?.id ?? null,
         source: "family",
         hidden: false,
