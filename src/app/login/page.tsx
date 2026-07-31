@@ -21,22 +21,25 @@ export default function LoginPage() {
   const db = createClient();
   const [mode, setMode] = useState<"family" | "guest">("family");
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
+  // idle → checking (verifying code) → redirecting (signed in, loading app)
+  const [phase, setPhase] = useState<"idle" | "checking" | "redirecting">("idle");
+  const busy = phase !== "idle";
 
   async function handleAccess(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setPhase("checking");
 
     if (mode === "guest") {
       const { error } = await db.auth.signInWithPassword({
         email: GUEST_EMAIL,
         password: code,
       });
-      setBusy(false);
       if (error) {
+        setPhase("idle");
         toast.error("That guest code doesn't match. Please try again.");
         return;
       }
+      setPhase("redirecting");
       router.push("/welcome");
       router.refresh();
       return;
@@ -47,11 +50,12 @@ export default function LoginPage() {
       const { error } = await db.auth.signInWithPassword({ email, password: code });
       if (!error) { ok = true; break; }
     }
-    setBusy(false);
     if (!ok) {
+      setPhase("idle");
       toast.error("That code doesn't match. Please try again.");
       return;
     }
+    setPhase("redirecting");
     router.push("/");
     router.refresh();
   }
@@ -140,7 +144,8 @@ export default function LoginPage() {
               className="h-12 text-center text-lg tracking-widest"
             />
             <Button type="submit" className="h-12 w-full text-base" disabled={busy || !code}>
-              {busy && <Loader2 className="size-4 animate-spin" />} Enter
+              {busy && <Loader2 className="size-4 animate-spin" />}
+              {phase === "idle" ? "Enter" : phase === "checking" ? "Checking…" : "Opening…"}
             </Button>
           </form>
 
@@ -151,6 +156,33 @@ export default function LoginPage() {
           </p>
         </motion.div>
       </div>
+
+      {/* full-screen loader after a successful code — covers the 2–3s redirect + data load */}
+      {phase === "redirecting" && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-event-emerald fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 text-white"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 1px, transparent 1px), radial-gradient(circle at 80% 60%, rgba(255,255,255,.25) 1px, transparent 1px)",
+              backgroundSize: "48px 48px, 72px 72px",
+            }}
+          />
+          <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+            <Loader2 className="size-8 animate-spin text-amber-200" />
+          </div>
+          <div className="relative text-center">
+            <p className="font-display text-2xl">
+              {mode === "family" ? "Opening your planner…" : "Opening the celebration…"}
+            </p>
+            <p className="mt-1 text-sm text-white/70">Just a moment ✨</p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

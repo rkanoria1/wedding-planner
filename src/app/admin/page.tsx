@@ -27,11 +27,12 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setBusy(true);
     const { error } = await db.auth.signInWithPassword({ email: ADMIN_EMAIL, password: code });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error("Incorrect admin passcode.");
       return;
     }
+    // keep the spinner through the redirect + data load
     router.push("/");
     router.refresh();
   }
