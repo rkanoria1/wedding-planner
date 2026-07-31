@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import { whatsappLink } from "@/lib/wedding";
+import { storageKey } from "@/lib/storage";
 import { MemberAvatar } from "@/components/shared/member-avatars";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -123,8 +124,10 @@ export function FilesSection({ eventId }: { eventId: string }) {
 
   async function upload(file: File) {
     if (!me) return;
-    const path = `${eventId}/${Date.now()}-${file.name}`;
-    const { error } = await db.storage.from("wedding-files").upload(path, file);
+    const path = storageKey(eventId, file.name);
+    const { error } = await db.storage
+      .from("wedding-files")
+      .upload(path, file, { contentType: file.type });
     if (error) return toast.error(error.message);
     await db.from("event_files").insert({
       event_id: eventId, name: file.name, path, size: file.size, uploaded_by: me.id,

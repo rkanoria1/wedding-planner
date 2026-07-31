@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Photo } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
+import { storageKey } from "@/lib/storage";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -35,13 +36,16 @@ export default function GalleryPage() {
 
   async function upload(files: FileList) {
     setBusy(true);
+    let added = 0;
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      const path = `gallery/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
-      const { error: upErr } = await db.storage.from("wedding-files").upload(path, file);
+      const path = storageKey("gallery", file.name);
+      const { error: upErr } = await db.storage
+        .from("wedding-files")
+        .upload(path, file, { contentType: file.type });
       if (upErr) { toast.error(upErr.message); continue; }
       const { data } = db.storage.from("wedding-files").getPublicUrl(path);
-      await db.from("photos").insert({
+      const { error: insErr } = await db.from("photos").insert({
         url: data.publicUrl,
         event_id: uploadEvent === "all" ? null : uploadEvent,
         caption: file.name.replace(/\.[^.]+$/, ""),
@@ -49,11 +53,15 @@ export default function GalleryPage() {
         source: "family",
         hidden: false,
       });
+      if (insErr) { toast.error(insErr.message); continue; }
+      added++;
     }
-    await logActivity("added", "photo", "to the gallery");
-    refresh("photos");
+    if (added > 0) {
+      await logActivity("added", "photo", `${added} to the gallery`);
+      refresh("photos");
+      toast.success(`${added} photo${added > 1 ? "s" : ""} added ✨`);
+    }
     setBusy(false);
-    toast.success("Photos added ✨");
   }
 
   async function remove(p: Photo) {

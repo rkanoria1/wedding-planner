@@ -5,6 +5,7 @@ import { EyeOff, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { TimelineItem } from "@/lib/types";
+import { storageKey } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -226,8 +227,10 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
       lookbookId = data.id;
       refresh("lookbooks");
     }
-    const path = `lookbook/${lookbookId}/${Date.now()}-${file.name}`;
-    const { error: upErr } = await db.storage.from("wedding-files").upload(path, file);
+    const path = storageKey(`lookbook/${lookbookId}`, file.name);
+    const { error: upErr } = await db.storage
+      .from("wedding-files")
+      .upload(path, file, { contentType: file.type });
     if (upErr) return toast.error(upErr.message);
     const { data } = db.storage.from("wedding-files").getPublicUrl(path);
     await db.from("lookbook_photos").insert({

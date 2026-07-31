@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileCheck2, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { storageKey } from "@/lib/storage";
 import type { Booking, BookingStatus } from "@/lib/types";
 import {
   BOOKING_CATEGORY_NAMES, BOOKING_STATUS_META, BOOKING_STATUS_ORDER, categoryMeta,
@@ -83,8 +84,10 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
   const showFitting = FITTING_CATEGORIES.has(form.category);
 
   async function uploadContract(file: File) {
-    const path = `contracts/${Date.now()}-${file.name}`;
-    const { error } = await db.storage.from("wedding-files").upload(path, file);
+    const path = storageKey("contracts", file.name);
+    const { error } = await db.storage
+      .from("wedding-files")
+      .upload(path, file, { contentType: file.type });
     if (error) return toast.error(error.message);
     const { data } = db.storage.from("wedding-files").getPublicUrl(path);
     setContractUrl(data.publicUrl);

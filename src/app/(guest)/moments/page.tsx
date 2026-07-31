@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Photo } from "@/lib/types";
 import { getGuestDisplayName } from "@/lib/guest";
+import { storageKey } from "@/lib/storage";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -27,8 +28,10 @@ export default function GuestMomentsPage() {
     setBusy(true);
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      const path = `gallery/guest/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
-      const { error: upErr } = await db.storage.from("wedding-files").upload(path, file);
+      const path = storageKey("gallery/guest", file.name);
+      const { error: upErr } = await db.storage
+        .from("wedding-files")
+        .upload(path, file, { contentType: file.type });
       if (upErr) { toast.error(upErr.message); continue; }
       const { data } = db.storage.from("wedding-files").getPublicUrl(path);
       const { error } = await db.from("photos").insert({
