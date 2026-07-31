@@ -45,24 +45,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
-    const { data: profile } = await supabase
+  // Role comes from the JWT's app_metadata (kept in sync with public.profiles
+  // by a DB trigger). app_metadata is service-role-only, so it stays
+  // trustworthy — and reading it here avoids a profiles query on EVERY
+  // navigation, which was roughly half the per-click latency.
+  // Falls back to the DB if the claim isn't present yet (older sessions).
+  async function resolveRole(): Promise<string | undefined> {
+    const claim = user?.app_metadata?.role;
+    if (typeof claim === "string") return claim;
+    const { data } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", user!.id)
       .maybeSingle();
+    return data?.role;
+  }
+
+  if (user && isAuthRoute) {
+    const role = await resolveRole();
     const url = request.nextUrl.clone();
-    url.pathname = profile?.role === "guest" ? "/welcome" : "/";
+    url.pathname = role === "guest" ? "/welcome" : "/";
     return NextResponse.redirect(url);
   }
 
   if (user && !isAuthRoute) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    const isGuest = profile?.role === "guest";
+    const isGuest = (await resolveRole()) === "guest";
     const onGuest = isGuestPath(path);
 
     if (isGuest && !onGuest) {

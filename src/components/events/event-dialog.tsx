@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { EventTheme, WeddingEvent } from "@/lib/types";
 import { EVENT_THEMES } from "@/lib/wedding";
+import { sweepEventStorage } from "@/lib/storage";
 import { EVENT_ICONS, EventIcon } from "@/components/shared/event-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +97,8 @@ export function EventDialog({
 
   async function remove() {
     if (!event) return;
+    // free this event's files/photos/contracts before the rows cascade away
+    await sweepEventStorage(db, event.id);
     const { error } = await db.from("events").delete().eq("id", event.id);
     if (error) return toast.error(error.message);
     await logActivity("deleted", "event", event.name);
