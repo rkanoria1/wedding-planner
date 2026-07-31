@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileCheck2, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
-import { storageKey } from "@/lib/storage";
+import { storageKey, storagePathFromUrl } from "@/lib/storage";
 import type { Booking, BookingStatus } from "@/lib/types";
 import {
   BOOKING_CATEGORY_NAMES, BOOKING_STATUS_META, BOOKING_STATUS_ORDER, categoryMeta,
@@ -131,6 +131,9 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
 
   async function remove() {
     if (!booking) return;
+    // free the contract file too, if any
+    const cpath = booking.contract_url ? storagePathFromUrl(booking.contract_url) : null;
+    if (cpath) await db.storage.from("wedding-files").remove([cpath]);
     const { error } = await db.from("bookings").delete().eq("id", booking.id);
     if (error) return toast.error(error.message);
     await logActivity("removed", "booking", booking.category);

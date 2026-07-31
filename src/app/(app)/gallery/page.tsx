@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { Photo } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
-import { storageKey } from "@/lib/storage";
+import { storageKey, storagePathFromUrl } from "@/lib/storage";
 import { compressImage } from "@/lib/image";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,9 @@ export default function GalleryPage() {
   }
 
   async function remove(p: Photo) {
+    // free the actual file, not just the row
+    const path = storagePathFromUrl(p.url);
+    if (path) await db.storage.from("wedding-files").remove([path]);
     await db.from("photos").delete().eq("id", p.id);
     refresh("photos");
     setLightbox(null);

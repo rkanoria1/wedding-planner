@@ -5,7 +5,7 @@ import { EyeOff, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
 import type { TimelineItem } from "@/lib/types";
-import { storageKey } from "@/lib/storage";
+import { storageKey, storagePathFromUrl } from "@/lib/storage";
 import { compressImage } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -245,6 +245,9 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
   }
 
   async function removePhoto(id: string) {
+    const { data } = await db.from("lookbook_photos").select("url").eq("id", id).single();
+    const path = data?.url ? storagePathFromUrl(data.url) : null;
+    if (path) await db.storage.from("wedding-files").remove([path]);
     await db.from("lookbook_photos").delete().eq("id", id);
     refresh("lookbook_photos");
   }

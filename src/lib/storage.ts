@@ -13,3 +13,15 @@ export function storageKey(prefix: string, fileName: string): string {
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   return `${prefix.replace(/\/+$/, "")}/${unique}.${ext}`;
 }
+
+/**
+ * Recover the object key from a stored public URL, so we can delete the actual
+ * file from Storage when its row is removed (otherwise deleted photos keep
+ * eating the storage quota forever).
+ */
+export function storagePathFromUrl(url: string, bucket = "wedding-files"): string | null {
+  const marker = `/object/public/${bucket}/`;
+  const i = url.indexOf(marker);
+  if (i === -1) return null;
+  return decodeURIComponent(url.slice(i + marker.length).split("?")[0]);
+}
