@@ -3,19 +3,20 @@ import { createServerClient } from "@supabase/ssr";
 import { GUEST_EMAIL } from "@/lib/guest";
 
 /**
- * Scan-to-enter: the wedding QR code points here (/g/<guest-code>).
- * We sign the visitor into the shared guest account server-side and drop
- * them straight on /welcome — no typing, no login screen.
+ * Scan-to-enter: the wedding QR points here (/g/<token>).
  *
- * Anyone holding the link gets guest access by design; the guest account
- * only ever sees celebration content (timeline, lookbook, blessings,
- * moments) and RLS keeps all planning data out of reach.
+ * The token in the URL is NOT a credential — it's an opaque, revocable
+ * handle. The server checks it, then signs the visitor in using the guest
+ * password held in a server-only env var, so the real code never appears
+ * in a URL, browser history, screenshot or log. Revoking a token kills a
+ * printed QR without changing the guest code everyone else uses.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params;
+  const token = decodeURIComponent(code);
   const dest = (path: string) => NextResponse.redirect(new URL(path, request.url));
 
   let response = dest("/welcome");
@@ -49,12 +50,23 @@ export async function GET(
     return dest("/");
   }
 
+  // is this an invite we issued, and is it still active?
+  const { data: valid, error: rpcError } = await supabase.rpc("redeem_guest_invite", {
+    t: token,
+  });
+  if (rpcError || valid !== true) return dest("/login?invite=invalid");
+
+  const guestPassword = process.env.GUEST_PORTAL_PASSWORD;
+  if (!guestPassword) {
+    // misconfigured deploy — fail closed rather than guessing
+    console.error("GUEST_PORTAL_PASSWORD is not set; QR sign-in disabled.");
+    return dest("/login?invite=unavailable");
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email: GUEST_EMAIL,
-    password: decodeURIComponent(code),
+    password: guestPassword,
   });
-
-  // bad/rotated QR → fall back to the normal login screen
   if (error) return dest("/login?invite=invalid");
 
   return response;
