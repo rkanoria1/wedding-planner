@@ -18,7 +18,7 @@ begin
   for rec in
     select * from (values
       ('rahul-family@rahul-somya.app', 'rahul@98311', 'rahul', 'Rahul''s Family'),
-      ('somya-family@rahul-somya.app', 'somya0610', 'somya', 'Somya''s Family')
+      ('somya-family@rahul-somya.app', 'somyasaraf', 'somya', 'Somya''s Family')
     ) as t(email, code, household, display_name)
   loop
     -- start clean so this script can be re-run to reset a code

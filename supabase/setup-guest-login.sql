@@ -25,7 +25,7 @@ end $$;
 do $$
 declare
   guest_email text := 'guests@rahul-somya.app';
-  guest_code text := 'welcome2027'; -- ← change this
+  guest_code text := 'welcome27'; -- ← change this
   uid uuid;
 begin
   delete from auth.users where email = guest_email;

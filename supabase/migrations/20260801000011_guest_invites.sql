@@ -1,7 +1,7 @@
 -- ============================================================
 -- Revocable QR invite tokens.
 --
--- Previously the QR encoded the guest password itself (/g/welcome2027),
+-- Previously the QR encoded the guest password itself (e.g. /g/<the-actual-code>),
 -- which leaked it into browser history, screenshots and logs — and the
 -- same string could be typed into the login form. Now the QR carries an
 -- opaque random token that is NOT a credential: it can be revoked or
