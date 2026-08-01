@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EyeOff, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { TimelineItem } from "@/lib/types";
 import { storageKey, storagePathFromUrl } from "@/lib/storage";
 import { compressImage } from "@/lib/image";
@@ -27,6 +28,7 @@ function toLocalInput(iso: string) {
 }
 
 export function TimelineEditor({ eventId }: { eventId: string }) {
+  const { t: tr } = useLang();
   const { db, isAdmin, timelineItems, refresh } = useWedding();
   const items = useMemo(
     () =>
@@ -60,7 +62,7 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
 
   async function save() {
     if (!form.title.trim() || !form.starts_at) {
-      return toast.error("Title and time are required");
+      return toast.error(tr("timeline.toast.required", "Title and time are required"));
     }
     const payload = {
       event_id: eventId,
@@ -81,7 +83,11 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
     }
     refresh("timeline_items");
     setOpen(false);
-    toast.success(form.id ? "Updated" : "Added to timeline");
+    toast.success(
+      form.id
+        ? tr("timeline.toast.updated", "Updated")
+        : tr("timeline.toast.added", "Added to timeline")
+    );
   }
 
   async function remove(id: string) {
@@ -90,18 +96,24 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
   }
 
   if (!isAdmin) {
-    return <p className="text-sm text-muted-foreground">Only admins can edit the timeline.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {tr("timeline.adminOnly", "Only admins can edit the timeline.")}
+      </p>
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button size="sm" onClick={() => openEdit()}>
-          <Plus className="size-4" /> Add moment
+          <Plus className="size-4" /> {tr("timeline.addMoment", "Add moment")}
         </Button>
       </div>
       {items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">No timeline items yet.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {tr("timeline.empty", "No timeline items yet.")}
+        </p>
       ) : (
         <ul className="divide-y rounded-xl border">
           {items.map((item) => (
@@ -112,7 +124,7 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
                 </button>
                 <p className="text-xs text-muted-foreground">
                   {new Date(item.starts_at).toLocaleString()}
-                  {!item.published && " · unpublished"}
+                  {!item.published && ` · ${tr("misc.unpublished", "unpublished")}`}
                 </p>
               </div>
               <Button size="icon" variant="ghost" className="size-8 text-destructive" onClick={() => remove(item.id)}>
@@ -127,12 +139,14 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display font-normal">
-              {form.id ? "Edit timeline item" : "Add timeline item"}
+              {form.id
+                ? tr("timeline.dialog.edit", "Edit timeline item")
+                : tr("timeline.dialog.add", "Add timeline item")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>When</Label>
+              <Label>{tr("timeline.field.when", "When")}</Label>
               <Input
                 type="datetime-local"
                 value={form.starts_at}
@@ -140,22 +154,24 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Title</Label>
+              <Label>{tr("timeline.field.title", "Title")}</Label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>People (optional)</Label>
+              <Label>{tr("timeline.field.people", "People (optional)")}</Label>
               <Input value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Note</Label>
+              <Label>{tr("timeline.field.note", "Note")}</Label>
               <Textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.published} onCheckedChange={(v) => setForm({ ...form, published: v })} />
-              <Label>Published for guests</Label>
+              <Label>{tr("timeline.published", "Published for guests")}</Label>
             </div>
-            <Button className="w-full" onClick={save}>Save</Button>
+            <Button className="w-full" onClick={save}>
+              {tr("action.save", "Save")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -164,6 +180,7 @@ export function TimelineEditor({ eventId }: { eventId: string }) {
 }
 
 export function LookbookEditor({ eventId }: { eventId: string }) {
+  const { t: tr } = useLang();
   const { db, isAdmin, lookbooks, lookbookPhotos, refresh } = useWedding();
   const book = lookbooks.find((l) => l.event_id === eventId);
   const photos = lookbookPhotos.filter((p) => p.lookbook_id === book?.id);
@@ -213,7 +230,7 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
       if (error) return toast.error(error.message);
     }
     refresh("lookbooks");
-    toast.success("Lookbook saved");
+    toast.success(tr("lookbook.toast.saved", "Lookbook saved"));
   }
 
   async function addPhoto(file: File) {
@@ -224,7 +241,7 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
         .insert({ event_id: eventId, published: true, colors: [] })
         .select("id")
         .single();
-      if (error || !data) return toast.error(error?.message ?? "Could not create lookbook");
+      if (error || !data) return toast.error(error?.message ?? tr("lookbook.toast.createFail", "Could not create lookbook"));
       lookbookId = data.id;
       refresh("lookbooks");
     }
@@ -241,7 +258,7 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
       sort_order: photos.length + 1,
     });
     refresh("lookbook_photos");
-    toast.success("Photo added");
+    toast.success(tr("lookbook.toast.photo", "Photo added"));
   }
 
   async function removePhoto(id: string) {
@@ -253,42 +270,46 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
   }
 
   if (!isAdmin) {
-    return <p className="text-sm text-muted-foreground">Only admins can edit the lookbook.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {tr("lookbook.adminOnly", "Only admins can edit the lookbook.")}
+      </p>
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Cover image URL</Label>
+        <Label>{tr("lookbook.field.cover", "Cover image URL")}</Label>
         <Input value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://…" />
       </div>
       <div className="space-y-2">
-        <Label>Outfit notes</Label>
+        <Label>{tr("lookbook.field.outfit", "Outfit notes")}</Label>
         <Textarea rows={3} value={outfit} onChange={(e) => setOutfit(e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label>Jewelry notes</Label>
+        <Label>{tr("lookbook.field.jewelry", "Jewelry notes")}</Label>
         <Textarea rows={3} value={jewelry} onChange={(e) => setJewelry(e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label>Colors (label:#hex, comma-separated)</Label>
+        <Label>{tr("lookbook.field.colors", "Colors (label:#hex, comma-separated)")}</Label>
         <Input
           value={colorsText}
           onChange={(e) => setColorsText(e.target.value)}
-          placeholder="Marigold:#d4af37, Wine:#7b1e3b"
+          placeholder={tr("lookbook.ph.colors", "Marigold:#d4af37, Wine:#7b1e3b")}
         />
       </div>
       <div className="flex items-center gap-2">
         <Switch checked={published} onCheckedChange={setPublished} />
-        <Label>Published for guests</Label>
+        <Label>{tr("lookbook.published", "Published for guests")}</Label>
       </div>
-      <Button onClick={save}>Save lookbook</Button>
+      <Button onClick={save}>{tr("lookbook.save", "Save lookbook")}</Button>
 
       <div className="border-t pt-4">
         <div className="mb-2 flex items-center justify-between">
-          <Label>Reference photos</Label>
+          <Label>{tr("lookbook.photos", "Reference photos")}</Label>
           <label className="inline-flex cursor-pointer items-center gap-1 text-sm text-primary">
-            <Plus className="size-4" /> Add
+            <Plus className="size-4" /> {tr("action.add", "Add")}
             <input
               type="file"
               accept="image/*"
@@ -323,6 +344,7 @@ export function LookbookEditor({ eventId }: { eventId: string }) {
 }
 
 export function BlessingsModeration() {
+  const { t: tr } = useLang();
   const { db, isAdmin, blessings, refresh } = useWedding();
   if (!isAdmin) return null;
 
@@ -338,9 +360,11 @@ export function BlessingsModeration() {
 
   return (
     <div className="space-y-3">
-      <h2 className="font-display text-xl">Guest blessings</h2>
+      <h2 className="font-display text-xl">{tr("settings.blessings.title", "Guest blessings")}</h2>
       {blessings.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No blessings yet.</p>
+        <p className="text-sm text-muted-foreground">
+          {tr("settings.blessings.empty", "No blessings yet.")}
+        </p>
       ) : (
         <ul className="divide-y rounded-xl border">
           {blessings.map((b) => (
@@ -348,10 +372,10 @@ export function BlessingsModeration() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{b.body}</p>
                 <p className="text-xs text-muted-foreground">
-                  {b.author_label}{b.hidden ? " · hidden" : ""}
+                  {b.author_label}{b.hidden ? ` · ${tr("misc.hidden", "hidden")}` : ""}
                 </p>
               </div>
-              <Button size="icon" variant="ghost" className="size-8" onClick={() => hide(b.id, !b.hidden)} title="Hide/show">
+              <Button size="icon" variant="ghost" className="size-8" onClick={() => hide(b.id, !b.hidden)} title={tr("action.hide", "Hide")}>
                 <EyeOff className="size-3.5" />
               </Button>
               <Button size="icon" variant="ghost" className="size-8 text-destructive" onClick={() => remove(b.id)}>

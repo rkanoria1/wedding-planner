@@ -8,6 +8,7 @@ import {
   CalendarDays, ListChecks, MapPin, Pencil, Plus, Sparkles,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import {
   EVENT_THEMES, STATUS_META, fireConfetti, formatDate,
   isOpen, shoppingProgress, taskListProgress,
@@ -25,7 +26,7 @@ import { KanbanBoard } from "@/components/tasks/kanban";
 import { TaskSheet } from "@/components/tasks/task-sheet";
 import { ShoppingSection } from "@/components/shopping/shopping-section";
 import {
-  BlessingsModeration, LookbookEditor, TimelineEditor,
+  LookbookEditor, TimelineEditor,
 } from "@/components/guest/family-editors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function EventPage() {
+  const { t: tr } = useLang();
   const { id } = useParams<{ id: string }>();
   const {
     isAdmin, events, tasks, shoppingItems, profiles, eventMembers,
@@ -42,7 +44,7 @@ export default function EventPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [openTask, setOpenTask] = useState<string | null>(null);
 
-  const evTasks = useMemo(() => tasks.filter((t) => t.event_id === id), [tasks, id]);
+  const evTasks = useMemo(() => tasks.filter((task) => task.event_id === id), [tasks, id]);
   const progress = taskListProgress(evTasks);
 
   // celebrate the moment every task lands
@@ -59,8 +61,8 @@ export default function EventPage() {
       <div className="mx-auto max-w-4xl pt-16">
         <EmptyState
           icon={Sparkles}
-          title="Event not found"
-          hint="It may have been removed or archived."
+          title={tr("event.notFound.title", "Event not found")}
+          hint={tr("event.notFound.hint", "It may have been removed or archived.")}
         />
       </div>
     );
@@ -92,10 +94,14 @@ export default function EventPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="font-display text-4xl drop-shadow-sm">{event.name}</h1>
-              {event.archived && <Badge className="bg-white/20 text-white">Archived</Badge>}
+              {event.archived && (
+                <Badge className="bg-white/20 text-white">
+                  {tr("event.archived", "Archived")}
+                </Badge>
+              )}
               {isAdmin && (
                 <Button
-                  size="icon" variant="ghost" aria-label="Edit event"
+                  size="icon" variant="ghost" aria-label={tr("event.edit", "Edit event")}
                   className="text-white/80 hover:bg-white/15 hover:text-white"
                   onClick={() => setEditOpen(true)}
                 >
@@ -112,7 +118,9 @@ export default function EventPage() {
                 {formatDate(event.event_date, "EEEE, d MMM yyyy")}
                 {daysToGo != null && daysToGo >= 0 && (
                   <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
-                    {daysToGo === 0 ? "Today! 🎉" : `${daysToGo} days`}
+                    {daysToGo === 0
+                      ? tr("event.today", "Today! 🎉")
+                      : tr("event.days", "{n} days", { n: daysToGo })}
                   </span>
                 )}
               </span>
@@ -132,7 +140,9 @@ export default function EventPage() {
               label={
                 <>
                   <span className="font-display text-2xl text-white">{progress}%</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/80">complete</span>
+                  <span className="text-[9px] uppercase tracking-wider text-white/80">
+                    {tr("event.complete", "complete")}
+                  </span>
                 </>
               }
             />
@@ -143,30 +153,34 @@ export default function EventPage() {
       {/* tabs */}
       <Tabs defaultValue="overview">
         <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="shopping">Shopping</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="lookbook">Lookbook</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="overview">{tr("event.tab.overview", "Overview")}</TabsTrigger>
+          <TabsTrigger value="tasks">{tr("event.tab.tasks", "Tasks")}</TabsTrigger>
+          <TabsTrigger value="shopping">{tr("event.tab.shopping", "Shopping")}</TabsTrigger>
+          <TabsTrigger value="timeline">{tr("event.tab.timeline", "Timeline")}</TabsTrigger>
+          <TabsTrigger value="lookbook">{tr("event.tab.lookbook", "Lookbook")}</TabsTrigger>
+          <TabsTrigger value="notes">{tr("event.tab.notes", "Notes")}</TabsTrigger>
+          <TabsTrigger value="files">{tr("event.tab.files", "Files")}</TabsTrigger>
+          <TabsTrigger value="members">{tr("event.tab.members", "Members")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Card className="card-lux shadow-none">
               <CardContent className="pt-6">
-                <p className="text-xs text-muted-foreground">Tasks completed</p>
+                <p className="text-xs text-muted-foreground">
+                  {tr("event.stat.tasksCompleted", "Tasks completed")}
+                </p>
                 <p className="font-display text-2xl">
-                  {evTasks.filter((t) => t.status === "completed").length}/{evTasks.length}
+                  {evTasks.filter((task) => task.status === "completed").length}/{evTasks.length}
                 </p>
                 <GradientBar value={progress} className="mt-2" />
               </CardContent>
             </Card>
             <Card className="card-lux shadow-none">
               <CardContent className="pt-6">
-                <p className="text-xs text-muted-foreground">Checklist done</p>
+                <p className="text-xs text-muted-foreground">
+                  {tr("event.stat.checklistDone", "Checklist done")}
+                </p>
                 <p className="font-display text-2xl">
                   {evShopping.filter((i) => i.purchased).length}/{evShopping.length}
                 </p>
@@ -179,11 +193,12 @@ export default function EventPage() {
           <Card className="card-lux shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 font-display text-lg font-normal">
-                <ListChecks className="size-5 text-gold" /> Checklist — what&apos;s left
+                <ListChecks className="size-5 text-gold" />{" "}
+                {tr("event.checklist.title", "Checklist — what's left")}
               </CardTitle>
               {isAdmin && (
                 <Button size="sm" variant="outline" onClick={() => setOpenTask("new")}>
-                  <Plus className="size-4" /> Add task
+                  <Plus className="size-4" /> {tr("event.addTask", "Add task")}
                 </Button>
               )}
             </CardHeader>
@@ -191,27 +206,27 @@ export default function EventPage() {
               {evTasks.filter(isOpen).length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
                   {evTasks.length === 0
-                    ? "No tasks yet — add the first one."
-                    : "Everything's done. Time to celebrate! 🎉"}
+                    ? tr("event.empty.noTasks", "No tasks yet — add the first one.")
+                    : tr("event.empty.allDone", "Everything's done. Time to celebrate! 🎉")}
                 </p>
               ) : (
                 <div className="divide-y">
                   {evTasks
                     .filter(isOpen)
                     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
-                    .map((t) => (
+                    .map((task) => (
                       <button
-                        key={t.id}
-                        onClick={() => setOpenTask(t.id)}
+                        key={task.id}
+                        onClick={() => setOpenTask(task.id)}
                         className="flex w-full items-center gap-3 py-2.5 text-left hover:bg-accent"
                       >
                         <span className="size-2 rounded-full bg-muted-foreground/40" />
-                        <span className="min-w-0 flex-1 truncate text-sm">{t.name}</span>
-                        <Badge variant="outline" className={STATUS_META[t.status].className}>
-                          {STATUS_META[t.status].label}
+                        <span className="min-w-0 flex-1 truncate text-sm">{task.name}</span>
+                        <Badge variant="outline" className={STATUS_META[task.status].className}>
+                          {tr("status." + task.status, STATUS_META[task.status].label)}
                         </Badge>
                         <span className="w-16 text-right text-xs text-muted-foreground">
-                          {formatDate(t.due_date, "d MMM")}
+                          {formatDate(task.due_date, "d MMM")}
                         </span>
                       </button>
                     ))}
@@ -225,7 +240,8 @@ export default function EventPage() {
           {isAdmin && (
             <div className="flex justify-end">
               <Button onClick={() => setOpenTask("new")}>
-                <Plus className="size-4" /> New task for {event.name}
+                <Plus className="size-4" />{" "}
+                {tr("event.newTaskFor", "New task for {name}", { name: event.name })}
               </Button>
             </div>
           )}

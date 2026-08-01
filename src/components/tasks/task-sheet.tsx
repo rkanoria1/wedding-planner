@@ -7,7 +7,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import { useLang } from "@/lib/i18n";
+import type { TaskPriority, TaskStatus } from "@/lib/types";
 import {
   PRIORITY_META, STATUS_META, STATUS_ORDER, fireConfetti, initials,
   whatsappLink,
@@ -46,6 +47,7 @@ interface TaskSheetProps {
 }
 
 export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
+  const { t: tr } = useLang();
   const {
     db, me, isAdmin, tasks, events, profiles, taskAssignees, checklistItems,
     comments, refresh, logActivity, notify, writeHousehold,
@@ -122,7 +124,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
   }
 
   async function save() {
-    if (!form.name.trim()) return toast.error("Give the task a name");
+    if (!form.name.trim()) return toast.error(tr("task.toast.needName", "Give the task a name"));
     setBusy(true);
     const payload = {
       name: form.name.trim(),
@@ -155,7 +157,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
       }
       await syncAssignees(data.id, []);
       await logActivity("created", "task", payload.name, data.id);
-      toast.success("Task created");
+      toast.success(tr("task.toast.created", "Task created"));
     } else if (existing) {
       const before = taskAssignees
         .filter((a) => a.task_id === existing.id)
@@ -179,12 +181,16 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
         fireConfetti(Boolean(allDone));
         if (allDone) {
           const ev = events.find((e) => e.id === evId);
-          toast.success(`🎉 Every task for ${ev?.name ?? "this event"} is complete!`);
+          toast.success(
+            tr("task.toast.allDone", "🎉 Every task for {event} is complete!", {
+              event: ev?.name ?? "this event",
+            })
+          );
         }
       } else {
         await logActivity("updated", "task", payload.name, existing.id);
       }
-      toast.success("Task updated");
+      toast.success(tr("task.toast.updated", "Task updated"));
     }
 
     await refresh("tasks");
@@ -215,7 +221,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
     if (assigneeRows.length) await db.from("task_assignees").insert(assigneeRows);
     await Promise.all([refresh("tasks"), refresh("task_assignees")]);
     await logActivity("duplicated", "task", existing.name, data.id);
-    toast.success("Task duplicated");
+    toast.success(tr("task.toast.duplicated", "Task duplicated"));
     onClose();
   }
 
@@ -225,7 +231,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
     if (error) return toast.error(error.message);
     await logActivity("deleted", "task", existing.name);
     refresh("tasks");
-    toast.success("Task deleted");
+    toast.success(tr("task.toast.deleted", "Task deleted"));
     onClose();
   }
 
@@ -261,7 +267,12 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
     for (const a of taskAssignees.filter(
       (a) => a.task_id === existing.id && a.profile_id !== me.id
     )) {
-      notify(a.profile_id, `New comment on “${existing.name}”`, newComment.trim(), `/tasks?task=${existing.id}`);
+      notify(
+        a.profile_id,
+        tr("task.notify.comment", "New comment on “{name}”", { name: existing.name }),
+        newComment.trim(),
+        `/tasks?task=${existing.id}`
+      );
     }
     setNewComment("");
     refresh("task_comments");
@@ -274,23 +285,25 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-xl">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle className="font-display text-xl font-normal">
-            {isNew ? "New task" : existing?.name ?? "Task"}
+            {isNew
+              ? tr("task.sheet.new", "New task")
+              : existing?.name ?? tr("task.sheet.fallback", "Task")}
           </SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 space-y-5 px-6 py-5">
           {/* form */}
           <div className="space-y-2">
-            <Label>Task name</Label>
+            <Label>{tr("task.field.name", "Task name")}</Label>
             <Input
               value={form.name}
               disabled={!canEdit}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Book the qazi"
+              placeholder={tr("task.ph.name", "e.g. Book the qazi")}
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>{tr("task.field.description", "Description")}</Label>
             <Textarea
               value={form.description}
               disabled={!canEdit}
@@ -301,7 +314,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Event</Label>
+              <Label>{tr("task.field.event", "Event")}</Label>
               <Select
                 value={form.event_id}
                 onValueChange={(v) => setForm({ ...form, event_id: v })}
@@ -309,7 +322,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               >
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">General (no event)</SelectItem>
+                  <SelectItem value="none">{tr("task.event.none", "General (no event)")}</SelectItem>
                   {events.filter((e) => !e.archived).map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
@@ -317,7 +330,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{tr("task.field.category", "Category")}</Label>
               <Select
                 value={form.category}
                 onValueChange={(v) => setForm({ ...form, category: v })}
@@ -326,13 +339,13 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TASK_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>{tr("tcat." + c, c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>{tr("task.field.priority", "Priority")}</Label>
               <Select
                 value={form.priority}
                 onValueChange={(v) => setForm({ ...form, priority: v as TaskPriority })}
@@ -341,13 +354,13 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(Object.keys(PRIORITY_META) as TaskPriority[]).map((p) => (
-                    <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+                    <SelectItem key={p} value={p}>{tr("priority." + p, PRIORITY_META[p].label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{tr("task.field.status", "Status")}</Label>
               <Select
                 value={form.status}
                 onValueChange={(v) => setForm({ ...form, status: v as TaskStatus })}
@@ -356,13 +369,13 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {STATUS_ORDER.map((s) => (
-                    <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                    <SelectItem key={s} value={s}>{tr("status." + s, STATUS_META[s].label)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Due date</Label>
+              <Label>{tr("task.field.due", "Due date")}</Label>
               <Input
                 type="date"
                 value={form.due_date}
@@ -371,7 +384,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Completion — {form.completion}%</Label>
+              <Label>{tr("task.field.completion", "Completion — {n}%", { n: form.completion })}</Label>
               <input
                 type="range" min={0} max={100} step={5}
                 value={form.completion}
@@ -391,17 +404,17 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
             />
             <span>
               <span className="flex items-center gap-1.5 text-sm font-medium">
-                <Users className="size-4 text-gold" /> Shared with both families
+                <Users className="size-4 text-gold" /> {tr("task.shared.title", "Shared with both families")}
               </span>
               <span className="text-xs text-muted-foreground">
-                Both Rahul&apos;s and Somya&apos;s families will see and can update this task.
+                {tr("task.shared.hint", "Both Rahul's and Somya's families will see and can update this task.")}
               </span>
             </span>
           </label>
 
           {/* assignees */}
           <div className="space-y-2">
-            <Label>Assigned to</Label>
+            <Label>{tr("task.field.assigned", "Assigned to")}</Label>
             <div className="flex flex-wrap gap-2">
               {profiles.map((p) => {
                 const on = assigned.includes(p.id);
@@ -436,13 +449,16 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                       key={p.id}
                       href={whatsappLink(
                         p.phone!,
-                        `Hi ${p.full_name.split(" ")[0]}! About the wedding task “${form.name}” —`
+                        tr("wa.task", "Hi {name}! About the wedding task “{task}” —", {
+                          name: p.full_name.split(" ")[0],
+                          task: form.name,
+                        })
                       )}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary hover:bg-primary/20 dark:text-primary"
                     >
-                      <MessageCircle className="size-3.5" /> WhatsApp {p.full_name.split(" ")[0]}
+                      <MessageCircle className="size-3.5" /> {tr("action.whatsapp", "WhatsApp")} {p.full_name.split(" ")[0]}
                     </a>
                   ))}
               </div>
@@ -456,7 +472,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <Label>
-                    Checklist{" "}
+                    {tr("task.checklist", "Checklist")}{" "}
                     {items.length > 0 && (
                       <span className="text-muted-foreground">
                         ({items.filter((i) => i.done).length}/{items.length})
@@ -481,7 +497,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                         <button
                           onClick={() => removeItem(item.id)}
                           className="opacity-0 transition-opacity group-hover:opacity-100"
-                          aria-label="Remove item"
+                          aria-label={tr("action.remove", "Remove")}
                         >
                           <X className="size-3.5 text-muted-foreground" />
                         </button>
@@ -494,7 +510,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                         value={newItem}
                         onChange={(e) => setNewItem(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addChecklistItem()}
-                        placeholder="Add checklist item…"
+                        placeholder={tr("task.checklist.ph", "Add checklist item…")}
                         className="h-8 text-sm"
                       />
                       <Button size="sm" variant="outline" onClick={addChecklistItem}>
@@ -508,7 +524,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
               {/* comments */}
               <Separator />
               <div>
-                <Label>Comments</Label>
+                <Label>{tr("task.comments", "Comments")}</Label>
                 <div className="mt-2 space-y-3">
                   {taskComments.map((c) => {
                     const a = author(c.author_id);
@@ -517,7 +533,9 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                         {a && <MemberAvatar profile={a} />}
                         <div className="min-w-0 flex-1 rounded-xl bg-muted px-3 py-2">
                           <div className="flex items-baseline justify-between gap-2">
-                            <p className="text-xs font-medium">{a?.full_name ?? "Someone"}</p>
+                            <p className="text-xs font-medium">
+                              {a?.full_name ?? tr("misc.someone", "Someone")}
+                            </p>
                             <p className="text-[10px] text-muted-foreground">
                               {format(parseISO(c.created_at), "d MMM, h:mm a")}
                             </p>
@@ -532,10 +550,10 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addComment()}
-                      placeholder="Write a comment…"
+                      placeholder={tr("task.comments.ph", "Write a comment…")}
                       className="h-9"
                     />
-                    <Button size="sm" onClick={addComment} aria-label="Send comment">
+                    <Button size="sm" onClick={addComment} aria-label={tr("task.comments.send", "Send comment")}>
                       <Send className="size-4" />
                     </Button>
                   </div>
@@ -550,18 +568,23 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
           {canEdit && (
             <Button onClick={save} disabled={busy} className="flex-1">
               {busy && <Loader2 className="size-4 animate-spin" />}
-              {isNew ? "Create task" : "Save changes"}
+              {isNew ? tr("task.create", "Create task") : tr("task.save", "Save changes")}
             </Button>
           )}
           {!isNew && isAdmin && existing && (
             <>
-              <Button variant="outline" size="icon" onClick={duplicate} aria-label="Duplicate">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={duplicate}
+                aria-label={tr("task.duplicate", "Duplicate")}
+              >
                 <Copy className="size-4" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger
                   render={
-                    <Button variant="outline" size="icon" aria-label="Delete"
+                    <Button variant="outline" size="icon" aria-label={tr("task.delete", "Delete")}
                       className="text-destructive hover:text-destructive" />
                   }
                 >
@@ -569,15 +592,19 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this task?</AlertDialogTitle>
+                    <AlertDialogTitle>{tr("task.delete.title", "Delete this task?")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      “{existing.name}” and its checklist and comments will be removed permanently.
+                      {tr(
+                        "task.delete.desc",
+                        "“{name}” and its checklist and comments will be removed permanently.",
+                        { name: existing.name }
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{tr("action.cancel", "Cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={remove} className="bg-destructive text-white hover:bg-destructive/90">
-                      Delete
+                      {tr("task.delete", "Delete")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -586,7 +613,7 @@ export function TaskSheet({ taskId, defaultEventId, onClose }: TaskSheetProps) {
           )}
           {!canEdit && (
             <p className="flex-1 text-center text-xs text-muted-foreground">
-              Only admins and assigned members can edit this task.
+              {tr("task.readOnly", "Only admins and assigned members can edit this task.")}
             </p>
           )}
         </div>

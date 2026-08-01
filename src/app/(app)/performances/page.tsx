@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Performance, PerformanceStatus } from "@/lib/types";
 import { formatDate } from "@/lib/wedding";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -31,6 +32,7 @@ const STATUS_META: Record<PerformanceStatus, { label: string; className: string 
 };
 
 function PerformancesInner() {
+  const { t: tr } = useLang();
   const params = useSearchParams();
   const { db, isAdmin, performances, events, refresh, logActivity } = useWedding();
 
@@ -75,7 +77,7 @@ function PerformancesInner() {
   }
 
   async function save() {
-    if (!form.title.trim()) return toast.error("Give the performance a name");
+    if (!form.title.trim()) return toast.error(tr("sangeet.toast.needName", "Give the performance a name"));
     const payload = {
       title: form.title.trim(),
       song: form.song.trim() || null,
@@ -99,7 +101,11 @@ function PerformancesInner() {
     }
     refresh("performances");
     setOpen(false);
-    toast.success(editing ? "Performance updated" : "Performance added");
+    toast.success(
+      editing
+        ? tr("sangeet.toast.updated", "Performance updated")
+        : tr("sangeet.toast.added", "Performance added")
+    );
   }
 
   async function remove(p: Performance) {
@@ -126,6 +132,9 @@ function PerformancesInner() {
     refresh("performances");
   }
 
+  const statusLabel = (s: PerformanceStatus) =>
+    tr(`sangeet.status.${s}`, STATUS_META[s].label);
+
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       {/* header */}
@@ -140,16 +149,21 @@ function PerformancesInner() {
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              <Music className="size-4 text-gold" /> Sangeet Night
+              <Music className="size-4 text-gold" /> {tr("sangeet.eyebrow", "Sangeet Night")}
             </div>
-            <h1 className="mt-1 font-display text-3xl">Performance lineup</h1>
+            <h1 className="mt-1 font-display text-3xl">
+              {tr("page.sangeet", "Performance lineup")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              The running order for the night — who&apos;s performing, to which song, and when they rehearse.
+              {tr(
+                "sangeet.sub",
+                "The running order for the night — who's performing, to which song, and when they rehearse."
+              )}
             </p>
           </div>
           {isAdmin && (
             <Button onClick={openAdd}>
-              <Plus className="size-4" /> Add performance
+              <Plus className="size-4" /> {tr("sangeet.add", "Add performance")}
             </Button>
           )}
         </div>
@@ -158,11 +172,15 @@ function PerformancesInner() {
       {/* stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: "Performances", value: stats.total },
-          { label: "Ready", value: stats.ready },
-          { label: "Next rehearsal", value: stats.nextRehearsal ? formatDate(stats.nextRehearsal, "d MMM") : "—" },
+          { key: "performances", label: tr("sangeet.stat.performances", "Performances"), value: stats.total },
+          { key: "ready", label: tr("sangeet.stat.ready", "Ready"), value: stats.ready },
+          {
+            key: "next",
+            label: tr("sangeet.stat.nextRehearsal", "Next rehearsal"),
+            value: stats.nextRehearsal ? formatDate(stats.nextRehearsal, "d MMM") : "—",
+          },
         ].map((s) => (
-          <Card key={s.label} className="card-lux shadow-none">
+          <Card key={s.key} className="card-lux shadow-none">
             <CardContent className="pt-6">
               <p className="text-xs text-muted-foreground">{s.label}</p>
               <p className="font-display text-2xl">{s.value}</p>
@@ -175,9 +193,15 @@ function PerformancesInner() {
       {ordered.length === 0 ? (
         <EmptyState
           icon={Music}
-          title="No performances yet"
-          hint="Add the first dance or act to start building the lineup."
-          action={isAdmin ? <Button onClick={openAdd}><Plus className="size-4" /> Add performance</Button> : undefined}
+          title={tr("sangeet.empty.title", "No performances yet")}
+          hint={tr("sangeet.empty.hint", "Add the first dance or act to start building the lineup.")}
+          action={
+            isAdmin ? (
+              <Button onClick={openAdd}>
+                <Plus className="size-4" /> {tr("sangeet.add", "Add performance")}
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="space-y-3">
@@ -197,7 +221,7 @@ function PerformancesInner() {
                         onClick={() => move(p, -1)}
                         disabled={i === 0}
                         className="text-muted-foreground disabled:opacity-30 hover:text-primary"
-                        aria-label="Move up"
+                        aria-label={tr("sangeet.moveUp", "Move up")}
                       >
                         <ChevronUp className="size-4" />
                       </button>
@@ -210,7 +234,7 @@ function PerformancesInner() {
                         onClick={() => move(p, 1)}
                         disabled={i === ordered.length - 1}
                         className="text-muted-foreground disabled:opacity-30 hover:text-primary"
-                        aria-label="Move down"
+                        aria-label={tr("sangeet.moveDown", "Move down")}
                       >
                         <ChevronDown className="size-4" />
                       </button>
@@ -224,9 +248,9 @@ function PerformancesInner() {
                       <button
                         onClick={() => isAdmin && cycleStatus(p)}
                         className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", STATUS_META[p.status].className)}
-                        title={isAdmin ? "Click to change" : undefined}
+                        title={isAdmin ? tr("sangeet.status.hint", "Click to change") : undefined}
                       >
-                        {STATUS_META[p.status].label}
+                        {statusLabel(p.status)}
                       </button>
                     </div>
                     {p.song && <p className="text-sm text-muted-foreground">♪ {p.song}</p>}
@@ -236,10 +260,15 @@ function PerformancesInner() {
                       )}
                       {p.rehearsal_date && (
                         <span className="inline-flex items-center gap-1">
-                          <Clock className="size-3.5" /> Rehearse {formatDate(p.rehearsal_date, "EEE, d MMM")}
+                          <Clock className="size-3.5" />{" "}
+                          {tr("sangeet.rehearse", "Rehearse {date}", {
+                            date: formatDate(p.rehearsal_date, "EEE, d MMM"),
+                          })}
                         </span>
                       )}
-                      {p.duration_min ? <span>{p.duration_min} min</span> : null}
+                      {p.duration_min ? (
+                        <span>{tr("sangeet.min", "{n} min", { n: p.duration_min })}</span>
+                      ) : null}
                     </div>
                     {p.notes && <p className="mt-1 text-xs text-muted-foreground">{p.notes}</p>}
                   </div>
@@ -247,10 +276,10 @@ function PerformancesInner() {
                   {/* actions */}
                   {isAdmin && (
                     <div className="flex shrink-0 gap-1">
-                      <Button size="icon" variant="ghost" className="size-8" aria-label="Edit" onClick={() => openEdit(p)}>
+                      <Button size="icon" variant="ghost" className="size-8" aria-label={tr("action.edit", "Edit")} onClick={() => openEdit(p)}>
                         <Pencil className="size-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="size-8 text-destructive" aria-label="Delete" onClick={() => remove(p)}>
+                      <Button size="icon" variant="ghost" className="size-8 text-destructive" aria-label={tr("action.delete", "Delete")} onClick={() => remove(p)}>
                         <Trash2 className="size-4" />
                       </Button>
                     </div>
@@ -267,59 +296,61 @@ function PerformancesInner() {
         <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display font-normal">
-              {editing ? "Edit performance" : "New performance"}
+              {editing
+                ? tr("sangeet.dialog.edit", "Edit performance")
+                : tr("sangeet.dialog.new", "New performance")}
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label>Performance</Label>
+              <Label>{tr("sangeet.field.title", "Performance")}</Label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g. Cousins group dance"
+                placeholder={tr("sangeet.ph.title", "e.g. Cousins group dance")}
               />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Song</Label>
+              <Label>{tr("sangeet.field.song", "Song")}</Label>
               <Input
                 value={form.song}
                 onChange={(e) => setForm({ ...form, song: e.target.value })}
-                placeholder="e.g. Gallan Goodiyaan"
+                placeholder={tr("sangeet.ph.song", "e.g. Gallan Goodiyaan")}
               />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Performers</Label>
+              <Label>{tr("sangeet.field.performers", "Performers")}</Label>
               <Input
                 value={form.performers}
                 onChange={(e) => setForm({ ...form, performers: e.target.value })}
-                placeholder="e.g. Aisha, Rohan, Meera"
+                placeholder={tr("sangeet.ph.performers", "e.g. Aisha, Rohan, Meera")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Rehearsal date</Label>
+              <Label>{tr("sangeet.field.rehearsal", "Rehearsal date")}</Label>
               <Input type="date" value={form.rehearsal_date} onChange={(e) => setForm({ ...form, rehearsal_date: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Duration (min)</Label>
+              <Label>{tr("sangeet.field.duration", "Duration (min)")}</Label>
               <Input type="number" min={0} value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{tr("sangeet.field.status", "Status")}</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as PerformanceStatus })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(Object.keys(STATUS_META) as PerformanceStatus[]).map((s) => (
-                    <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                    <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Function</Label>
+              <Label>{tr("sangeet.field.function", "Function")}</Label>
               <Select value={form.event_id} onValueChange={(v) => setForm({ ...form, event_id: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">General</SelectItem>
+                  <SelectItem value="none">{tr("misc.general", "General")}</SelectItem>
                   {events.filter((e) => !e.archived).map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
@@ -327,11 +358,13 @@ function PerformancesInner() {
               </Select>
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Notes</Label>
+              <Label>{tr("sangeet.field.notes", "Notes")}</Label>
               <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <Button className="col-span-2" onClick={save}>
-              {editing ? "Save performance" : "Add performance"}
+              {editing
+                ? tr("sangeet.save", "Save performance")
+                : tr("sangeet.add", "Add performance")}
             </Button>
           </div>
         </DialogContent>

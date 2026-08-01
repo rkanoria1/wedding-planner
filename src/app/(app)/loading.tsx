@@ -1,12 +1,17 @@
+"use client";
+
 /**
  * Shown instantly on every tab change while the next route streams in.
  * Without this the app looked frozen for a couple of seconds on navigation.
  * Kept deliberately light: a shimmering skeleton in the app's own shapes.
  */
+import { useLang } from "@/lib/i18n";
+
 export default function Loading() {
+  const { t: tr } = useLang();
   return (
     <div className="mx-auto max-w-7xl space-y-5" aria-busy="true" aria-live="polite">
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{tr("misc.loading", "Loading…")}</span>
 
       {/* page heading */}
       <div className="space-y-2">

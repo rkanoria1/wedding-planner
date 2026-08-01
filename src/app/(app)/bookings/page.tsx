@@ -8,6 +8,7 @@ import {
   MessageCircle, Phone, Plus, Scissors, Sparkles, TriangleAlert,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Booking } from "@/lib/types";
 import {
   BOOKING_STATUS_META, BOOKING_URGENCY_META, bookingStats, bookingUrgency,
@@ -28,6 +29,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 function BookingsPageInner() {
+  const { t: tr } = useLang();
   const params = useSearchParams();
   const { db, isAdmin, bookings, events, settings, refresh, logActivity } = useWedding();
   const weddingDate = settings.wedding_date;
@@ -66,7 +68,7 @@ function BookingsPageInner() {
     await logActivity(
       isSecured(status) ? "secured booking" : "updated booking",
       "booking",
-      `${b.category}${b.vendor_name ? ` — ${b.vendor_name}` : ""} → ${BOOKING_STATUS_META[status].label}`,
+      `${tr("bcat." + b.category, b.category)}${b.vendor_name ? ` — ${b.vendor_name}` : ""} → ${tr("bstatus." + status, BOOKING_STATUS_META[status].label)}`,
       b.id
     );
     refresh("bookings");
@@ -79,22 +81,29 @@ function BookingsPageInner() {
   const pendingShareText = useMemo(() => {
     const pending = sortedBookings.filter((b) => b.status !== "cancelled" && !isSecured(b.status));
     const lines = pending.map((b) => {
-      const u = BOOKING_URGENCY_META[bookingUrgency(b, weddingDate)].label;
+      const u = bookingUrgency(b, weddingDate);
+      const uLabel = tr("burgency." + u, BOOKING_URGENCY_META[u].label);
       const by = formatDate(idealBookByDate(b.category, weddingDate).toISOString(), "d MMM");
-      return `• ${b.category}${b.vendor_name ? ` (${b.vendor_name})` : ""} — ${u}, book by ${by}`;
+      const cat = tr("bcat." + b.category, b.category);
+      return `• ${cat}${b.vendor_name ? ` (${b.vendor_name})` : ""} ${tr("bookings.share.line", "— {urgency}, book by {date}", { urgency: uLabel, date: by })}`;
     });
     return (
-      `💍 Wedding vendor bookings — still to confirm\n\n` +
-      (lines.length ? lines.join("\n") : "All vendors are booked! 🎉") +
-      `\n\nSecured ${stats.secured}/${stats.total}. Wedding on ${formatDate(weddingDate, "d MMM yyyy")}.`
+      `${tr("bookings.share.header", "💍 Wedding vendor bookings — still to confirm")}\n\n` +
+      (lines.length ? lines.join("\n") : tr("bookings.share.allDone", "All vendors are booked! 🎉")) +
+      `\n\n` +
+      tr("bookings.share.footer", "Secured {secured}/{total}. Wedding on {date}.", {
+        secured: stats.secured,
+        total: stats.total,
+        date: formatDate(weddingDate, "d MMM yyyy"),
+      })
     );
-  }, [sortedBookings, weddingDate, stats]);
+  }, [sortedBookings, weddingDate, stats, tr]);
 
   const statTiles = [
-    { label: "Bookings needed", value: stats.total, icon: ClipboardList, tint: "text-primary", bg: "bg-primary/10" },
-    { label: "Confirmed", value: stats.confirmed, icon: BadgeCheck, tint: "text-primary", bg: "bg-primary/10" },
-    { label: "Pending", value: stats.pending, icon: CalendarClock, tint: "text-amber-600", bg: "bg-amber-500/10" },
-    { label: "Overdue", value: stats.overdue, icon: TriangleAlert, tint: "text-red-600", bg: "bg-red-500/10" },
+    { id: "needed", label: tr("bookings.stat.needed", "Bookings needed"), value: stats.total, icon: ClipboardList, tint: "text-primary", bg: "bg-primary/10" },
+    { id: "confirmed", label: tr("bookings.stat.confirmed", "Confirmed"), value: stats.confirmed, icon: BadgeCheck, tint: "text-primary", bg: "bg-primary/10" },
+    { id: "pending", label: tr("bookings.stat.pending", "Pending"), value: stats.pending, icon: CalendarClock, tint: "text-amber-600", bg: "bg-amber-500/10" },
+    { id: "overdue", label: tr("bookings.stat.overdue", "Overdue"), value: stats.overdue, icon: TriangleAlert, tint: "text-red-600", bg: "bg-red-500/10" },
   ];
 
   return (
@@ -116,22 +125,27 @@ function BookingsPageInner() {
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              <Sparkles className="size-4 text-gold" /> Critical Booking Tracker
+              <Sparkles className="size-4 text-gold" /> {tr("bookings.eyebrow", "Critical Booking Tracker")}
             </div>
             <h1 className="mt-1 font-display text-3xl sm:text-4xl">
-              Lock in every <span className="text-gradient-gold">vendor</span> on time
+              {tr("bookings.title.prefix", "Lock in every")}{" "}
+              <span className="text-gradient-gold">{tr("bookings.title.highlight", "vendor")}</span>{" "}
+              {tr("bookings.title.suffix", "on time")}
             </h1>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Each essential service has a typical lead time. We flag what needs booking
-              now so nothing slips before {formatDate(weddingDate, "d MMM yyyy")}.
+              {tr(
+                "bookings.sub",
+                "Each essential service has a typical lead time. We flag what needs booking now so nothing slips before {date}.",
+                { date: formatDate(weddingDate, "d MMM yyyy") }
+              )}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {isAdmin && (
                 <Button onClick={() => openAdd()}>
-                  <Plus className="size-4" /> Add booking
+                  <Plus className="size-4" /> {tr("action.addBooking", "Add booking")}
                 </Button>
               )}
-              <ShareWhatsApp text={pendingShareText} label="Share pending" />
+              <ShareWhatsApp text={pendingShareText} label={tr("bookings.sharePending", "Share pending")} />
               <PrintButton />
             </div>
           </div>
@@ -143,24 +157,26 @@ function BookingsPageInner() {
               label={
                 <>
                   <span className="font-display text-3xl">{stats.progress}%</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">secured</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {tr("bookings.securedPct", "secured")}
+                  </span>
                 </>
               }
             />
             <div className="space-y-1 text-sm">
               <p className="flex items-center gap-1.5">
                 <CircleCheckBig className="size-4 text-primary" />
-                <span className="text-muted-foreground">Secured:</span>
+                <span className="text-muted-foreground">{tr("bookings.securedLabel", "Secured:")}</span>
                 <span className="font-medium">{stats.secured}/{stats.total}</span>
               </p>
               <p className="flex items-center gap-1.5">
                 <CalendarClock className="size-4 text-amber-600" />
-                <span className="text-muted-foreground">Pending:</span>
+                <span className="text-muted-foreground">{tr("bookings.pendingLabel", "Pending:")}</span>
                 <span className="font-medium">{stats.pending}</span>
               </p>
               <p className="flex items-center gap-1.5">
                 <FileSignature className="size-4 text-gold" />
-                <span className="text-muted-foreground">Contracts signed:</span>
+                <span className="text-muted-foreground">{tr("bookings.contractsSigned", "Contracts signed:")}</span>
                 <span className="font-medium">
                   {bookings.filter((b) => b.contract_signed && b.status !== "cancelled").length}
                 </span>
@@ -174,12 +190,12 @@ function BookingsPageInner() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statTiles.map((s, i) => (
           <motion.div
-            key={s.label}
+            key={s.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 + i * 0.05 }}
           >
-            <Card className={cn("card-lux shadow-none", s.label === "Overdue" && stats.overdue > 0 && "border-red-500/40")}>
+            <Card className={cn("card-lux shadow-none", s.id === "overdue" && stats.overdue > 0 && "border-red-500/40")}>
               <CardContent className="flex items-center gap-4 pt-6">
                 <div className={cn("flex size-12 items-center justify-center rounded-xl", s.bg)}>
                   <s.icon className={cn("size-6", s.tint)} />
@@ -204,7 +220,9 @@ function BookingsPageInner() {
           <div className="flex items-center gap-2 border-b border-red-500/20 bg-red-500/10 px-4 py-2.5">
             <TriangleAlert className="size-4 text-red-600" />
             <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-              {overdue.length} booking{overdue.length > 1 ? "s are" : " is"} past the ideal book-by date
+              {overdue.length === 1
+                ? tr("bookings.overdue.one", "{n} booking is past the ideal book-by date", { n: overdue.length })
+                : tr("bookings.overdue.many", "{n} bookings are past the ideal book-by date", { n: overdue.length })}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 p-3">
@@ -215,7 +233,7 @@ function BookingsPageInner() {
                 className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-card px-3 py-1.5 text-sm transition-colors hover:bg-red-500/10"
               >
                 <CategoryIcon name={categoryMeta(b.category).icon} className="size-3.5 text-red-600" />
-                {b.category}
+                {tr("bcat." + b.category, b.category)}
               </button>
             ))}
           </div>
@@ -227,7 +245,7 @@ function BookingsPageInner() {
         <Card className="card-lux shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-lg font-normal">
-              <Scissors className="size-5 text-gold" /> Upcoming trials, tastings & fittings
+              <Scissors className="size-5 text-gold" /> {tr("bookings.milestones.title", "Upcoming trials, tastings & fittings")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -240,16 +258,18 @@ function BookingsPageInner() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                      {m.kind === "trial" ? "Trial / Tasting" : "Fitting"}
+                      {m.kind === "trial"
+                        ? tr("bookings.milestones.trial", "Trial / Tasting")
+                        : tr("bookings.milestones.fitting", "Fitting")}
                     </span>
                     <span className="text-[11px] font-medium text-muted-foreground">
-                      {m.daysAway === 0 ? "Today" : `${m.daysAway}d`}
+                      {m.daysAway === 0 ? tr("misc.today", "Today") : `${m.daysAway}d`}
                     </span>
                   </div>
                   <p className="text-sm font-semibold leading-tight">
-                    {m.booking.vendor_name ?? m.booking.category}
+                    {m.booking.vendor_name ?? tr("bcat." + m.booking.category, m.booking.category)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{m.booking.category}</p>
+                  <p className="text-xs text-muted-foreground">{tr("bcat." + m.booking.category, m.booking.category)}</p>
                   <p className="mt-auto flex items-center gap-1 text-xs font-medium">
                     <CalendarClock className="size-3.5 text-gold" />
                     {formatDate(m.date, "EEE, d MMM")}
@@ -269,11 +289,11 @@ function BookingsPageInner() {
 
       {/* view switch */}
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl">Category coverage</h2>
+        <h2 className="font-display text-2xl">{tr("bookings.coverage", "Category coverage")}</h2>
         <Tabs value={view} onValueChange={setView}>
           <TabsList>
-            <TabsTrigger value="board">Board</TabsTrigger>
-            <TabsTrigger value="list">All bookings</TabsTrigger>
+            <TabsTrigger value="board">{tr("bookings.tab.board", "Board")}</TabsTrigger>
+            <TabsTrigger value="list">{tr("bookings.tab.list", "All bookings")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -283,9 +303,9 @@ function BookingsPageInner() {
       ) : bookings.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="No bookings yet"
-          hint="Add your first vendor booking to start tracking."
-          action={isAdmin ? <Button onClick={() => openAdd()}><Plus className="size-4" /> Add booking</Button> : undefined}
+          title={tr("bookings.empty.title", "No bookings yet")}
+          hint={tr("bookings.empty.hint", "Add your first vendor booking to start tracking.")}
+          action={isAdmin ? <Button onClick={() => openAdd()}><Plus className="size-4" /> {tr("action.addBooking", "Add booking")}</Button> : undefined}
         />
       ) : (
         <div className="space-y-3">
@@ -308,17 +328,19 @@ function BookingsPageInner() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold">{b.vendor_name ?? b.category}</p>
+                          <p className="font-semibold">{b.vendor_name ?? tr("bcat." + b.category, b.category)}</p>
                           {b.contract_signed && (
                             <Badge variant="outline" className="gap-1 border-primary/30 text-primary dark:text-primary">
-                              <FileSignature className="size-3" /> Signed
+                              <FileSignature className="size-3" /> {tr("bookings.badge.signed", "Signed")}
                             </Badge>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {b.category}{fn ? ` · ${fn}` : ""}
+                          {tr("bcat." + b.category, b.category)}{fn ? ` · ${fn}` : ""}
                           {!isSecured(b.status) && (
-                            <span className={cn("ml-1 font-medium", meta.text)}>· {meta.label}</span>
+                            <span className={cn("ml-1 font-medium", meta.text)}>
+                              · {tr("burgency." + urgency, meta.label)}
+                            </span>
                           )}
                         </p>
                       </div>
@@ -340,15 +362,21 @@ function BookingsPageInner() {
                           <a
                             href={`tel:${b.contact_phone}`}
                             className="inline-flex size-8 items-center justify-center rounded-full border text-muted-foreground hover:bg-accent"
-                            aria-label="Call"
+                            aria-label={tr("action.call", "Call")}
                           >
                             <Phone className="size-3.5" />
                           </a>
                           <a
-                            href={whatsappLink(b.contact_phone, `Hi${b.contact_person ? ` ${b.contact_person}` : ""}! Regarding ${b.category} for our wedding —`)}
+                            href={whatsappLink(
+                              b.contact_phone,
+                              tr("wa.booking", "Hi{who}! Regarding {category} for our wedding —", {
+                                who: b.contact_person ? ` ${b.contact_person}` : "",
+                                category: tr("bcat." + b.category, b.category),
+                              })
+                            )}
                             target="_blank" rel="noreferrer"
                             className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
-                            aria-label="WhatsApp"
+                            aria-label={tr("action.whatsapp", "WhatsApp")}
                           >
                             <MessageCircle className="size-3.5" />
                           </a>
@@ -356,7 +384,7 @@ function BookingsPageInner() {
                       )}
                       {isAdmin && (
                         <Button size="sm" variant="outline" onClick={() => openEdit(b)}>
-                          Edit
+                          {tr("action.edit", "Edit")}
                         </Button>
                       )}
                     </div>

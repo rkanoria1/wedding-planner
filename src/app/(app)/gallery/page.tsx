@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ImagePlus, Images, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Photo } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
 import { storageKey, storagePathFromUrl } from "@/lib/storage";
@@ -15,6 +16,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export default function GalleryPage() {
+  const { t: tr } = useLang();
   const { db, me, isAdmin, photos, events, refresh, logActivity } = useWedding();
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -59,9 +61,9 @@ export default function GalleryPage() {
       added++;
     }
     if (added > 0) {
-      await logActivity("added", "photo", `${added} to the gallery`);
+      await logActivity("added", "photo", tr("gallery.log.added", "{n} to the gallery", { n: added }));
       refresh("photos");
-      toast.success(`${added} photo${added > 1 ? "s" : ""} added ✨`);
+      toast.success(tr("gallery.toast.added", "Photos added ✨"));
     }
     setBusy(false);
   }
@@ -73,17 +75,22 @@ export default function GalleryPage() {
     await db.from("photos").delete().eq("id", p.id);
     refresh("photos");
     setLightbox(null);
-    toast.success("Photo removed");
+    toast.success(tr("gallery.toast.removed", "Photo removed"));
   }
 
   async function toggleHidden(p: Photo) {
     await db.from("photos").update({ hidden: !p.hidden }).eq("id", p.id);
     refresh("photos");
     setLightbox({ ...p, hidden: !p.hidden });
-    toast.success(p.hidden ? "Photo visible again" : "Photo hidden from guests");
+    toast.success(
+      p.hidden
+        ? tr("gallery.toast.visible", "Photo visible again")
+        : tr("gallery.toast.hidden", "Photo hidden from guests")
+    );
   }
 
   const canDelete = (p: Photo) => isAdmin || p.uploaded_by === me?.id;
+  const hiddenLabel = tr("misc.hidden", "hidden");
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -99,12 +106,16 @@ export default function GalleryPage() {
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              <Images className="size-4 text-gold" /> Moments
+              <Images className="size-4 text-gold" /> {tr("gallery.eyebrow", "Moments")}
             </div>
-            <h1 className="mt-1 font-display text-3xl">Inspiration &amp; memories</h1>
+            <h1 className="mt-1 font-display text-3xl">
+              {tr("page.moments", "Inspiration & memories")}
+            </h1>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Outfit, decor and jewellery ideas before the day — and everyone&apos;s
-              photos after. Shared by both families.
+              {tr(
+                "gallery.sub",
+                "Outfit, decor and jewellery ideas before the day — and everyone's photos after. Shared by both families."
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -112,9 +123,9 @@ export default function GalleryPage() {
               value={uploadEvent}
               onChange={(e) => setUploadEvent(e.target.value)}
               className="h-9 rounded-lg border bg-card px-2 text-sm"
-              aria-label="Add photos to function"
+              aria-label={tr("gallery.uploadFor", "Add photos to function")}
             >
-              <option value="all">General</option>
+              <option value="all">{tr("misc.general", "General")}</option>
               {activeEvents.map((e) => (
                 <option key={e.id} value={e.id}>{e.name}</option>
               ))}
@@ -125,7 +136,7 @@ export default function GalleryPage() {
             />
             <Button onClick={() => fileRef.current?.click()} disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-              Add photos
+              {tr("gallery.add", "Add photos")}
             </Button>
           </div>
         </div>
@@ -133,7 +144,7 @@ export default function GalleryPage() {
 
       {/* function filter */}
       <div className="flex flex-wrap gap-2">
-        <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+        <FilterChip label={tr("misc.all", "All")} active={filter === "all"} onClick={() => setFilter("all")} />
         {activeEvents.map((e) => (
           <FilterChip
             key={e.id}
@@ -144,18 +155,34 @@ export default function GalleryPage() {
           />
         ))}
         <span className="mx-1 self-center text-muted-foreground">·</span>
-        <FilterChip label="Family" active={sourceFilter === "family"} onClick={() => setSourceFilter("family")} />
-        <FilterChip label="From guests" active={sourceFilter === "guest"} onClick={() => setSourceFilter("guest")} />
-        <FilterChip label="Everyone" active={sourceFilter === "all"} onClick={() => setSourceFilter("all")} />
+        <FilterChip
+          label={tr("gallery.filter.family", "Family")}
+          active={sourceFilter === "family"}
+          onClick={() => setSourceFilter("family")}
+        />
+        <FilterChip
+          label={tr("gallery.filter.guests", "From guests")}
+          active={sourceFilter === "guest"}
+          onClick={() => setSourceFilter("guest")}
+        />
+        <FilterChip
+          label={tr("gallery.filter.everyone", "Everyone")}
+          active={sourceFilter === "all"}
+          onClick={() => setSourceFilter("all")}
+        />
       </div>
 
       {/* grid */}
       {shown.length === 0 ? (
         <EmptyState
           icon={Images}
-          title="No photos yet"
-          hint="Add outfit, decor or jewellery inspiration to get started."
-          action={<Button onClick={() => fileRef.current?.click()}><ImagePlus className="size-4" /> Add photos</Button>}
+          title={tr("gallery.empty.title", "No photos yet")}
+          hint={tr("gallery.empty.hint", "Add outfit, decor or jewellery inspiration to get started.")}
+          action={
+            <Button onClick={() => fileRef.current?.click()}>
+              <ImagePlus className="size-4" /> {tr("gallery.add", "Add photos")}
+            </Button>
+          }
         />
       ) : (
         <div className="columns-2 gap-3 sm:columns-3 lg:columns-4 [&>*]:mb-3">
@@ -171,7 +198,7 @@ export default function GalleryPage() {
                 className="group relative block w-full overflow-hidden rounded-xl border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.url} alt={p.caption ?? "Wedding photo"} className="w-full transition-transform duration-500 group-hover:scale-105" />
+                <img src={p.url} alt={p.caption ?? tr("gallery.alt.photo", "Wedding photo")} className="w-full transition-transform duration-500 group-hover:scale-105" />
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                 {ev && (
                   <span
@@ -183,13 +210,14 @@ export default function GalleryPage() {
                 )}
                 {p.source === "guest" && (
                   <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
-                    Guest{p.author_label ? ` · ${p.author_label}` : ""}
-                    {p.hidden ? " · hidden" : ""}
+                    {tr("gallery.badge.guest", "Guest")}
+                    {p.author_label ? ` · ${p.author_label}` : ""}
+                    {p.hidden ? ` · ${hiddenLabel}` : ""}
                   </span>
                 )}
                 {p.hidden && p.source !== "guest" && (
                   <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
-                    Hidden
+                    {tr("misc.hidden", "Hidden")}
                   </span>
                 )}
               </motion.button>
@@ -211,18 +239,20 @@ export default function GalleryPage() {
                   <p className="text-xs text-muted-foreground">
                     {formatDate(lightbox.created_at, "d MMM yyyy")}
                     {lightbox.author_label ? ` · ${lightbox.author_label}` : ""}
-                    {lightbox.hidden ? " · hidden" : ""}
+                    {lightbox.hidden ? ` · ${hiddenLabel}` : ""}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => toggleHidden(lightbox)}>
-                      {lightbox.hidden ? "Unhide" : "Hide"}
+                      {lightbox.hidden
+                        ? tr("action.unhide", "Unhide")
+                        : tr("action.hide", "Hide")}
                     </Button>
                   )}
                   {canDelete(lightbox) && (
                     <Button variant="outline" size="sm" className="text-destructive" onClick={() => remove(lightbox)}>
-                      <Trash2 className="size-4" /> Remove
+                      <Trash2 className="size-4" /> {tr("action.remove", "Remove")}
                     </Button>
                   )}
                 </div>
@@ -253,4 +283,3 @@ function FilterChip({
     </button>
   );
 }
-

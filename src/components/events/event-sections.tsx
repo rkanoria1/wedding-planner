@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { whatsappLink } from "@/lib/wedding";
 import { storageKey } from "@/lib/storage";
 import { MemberAvatar } from "@/components/shared/member-avatars";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 /* ————— notes ————— */
 
 export function NotesSection({ eventId }: { eventId?: string | null }) {
+  const { t: tr } = useLang();
   const { db, me, isAdmin, notes, profiles, refresh } = useWedding();
   const [body, setBody] = useState("");
 
@@ -57,14 +59,18 @@ export function NotesSection({ eventId }: { eventId?: string | null }) {
           rows={2}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Jot a quick note for the family…"
+          placeholder={tr("notes.ph", "Jot a quick note for the family…")}
         />
         <Button onClick={add} className="self-end">
-          <Plus className="size-4" /> Add
+          <Plus className="size-4" /> {tr("notes.add", "Add")}
         </Button>
       </div>
       {scoped.length === 0 ? (
-        <EmptyState icon={StickyNote} title="No notes yet" hint="Ideas, reminders, vendor quirks — capture them here." />
+        <EmptyState
+          icon={StickyNote}
+          title={tr("notes.empty.title", "No notes yet")}
+          hint={tr("notes.empty.hint", "Ideas, reminders, vendor quirks — capture them here.")}
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {scoped.map((n) => {
@@ -89,14 +95,14 @@ export function NotesSection({ eventId }: { eventId?: string | null }) {
                         <>
                           <Button
                             size="icon" variant="ghost" className="size-7"
-                            aria-label={n.pinned ? "Unpin" : "Pin"}
+                            aria-label={n.pinned ? tr("notes.unpin", "Unpin") : tr("notes.pin", "Pin")}
                             onClick={() => togglePin(n.id, !n.pinned)}
                           >
                             {n.pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
                           </Button>
                           <Button
                             size="icon" variant="ghost" className="size-7 text-destructive"
-                            aria-label="Delete note"
+                            aria-label={tr("action.delete", "Delete")}
                             onClick={() => remove(n.id)}
                           >
                             <Trash2 className="size-3.5" />
@@ -118,6 +124,7 @@ export function NotesSection({ eventId }: { eventId?: string | null }) {
 /* ————— files ————— */
 
 export function FilesSection({ eventId }: { eventId: string }) {
+  const { t: tr } = useLang();
   const { db, me, isAdmin, files, profiles, refresh, logActivity } = useWedding();
   const inputRef = useRef<HTMLInputElement>(null);
   const scoped = files.filter((f) => f.event_id === eventId);
@@ -134,7 +141,7 @@ export function FilesSection({ eventId }: { eventId: string }) {
     });
     await logActivity("uploaded", "file", file.name);
     refresh("event_files");
-    toast.success("File uploaded");
+    toast.success(tr("files.toast.uploaded", "File uploaded"));
   }
 
   async function remove(id: string, path: string, name: string) {
@@ -149,7 +156,7 @@ export function FilesSection({ eventId }: { eventId: string }) {
   }
 
   const uploader = (id: string | null) =>
-    profiles.find((p) => p.id === id)?.full_name ?? "Someone";
+    profiles.find((p) => p.id === id)?.full_name ?? tr("misc.someone", "Someone");
 
   return (
     <div className="space-y-4">
@@ -162,10 +169,14 @@ export function FilesSection({ eventId }: { eventId: string }) {
         }}
       />
       <Button variant="outline" onClick={() => inputRef.current?.click()}>
-        <Upload className="size-4" /> Upload file
+        <Upload className="size-4" /> {tr("files.upload", "Upload file")}
       </Button>
       {scoped.length === 0 ? (
-        <EmptyState icon={FileText} title="No files yet" hint="Contracts, quotes, mood boards, seating charts…" />
+        <EmptyState
+          icon={FileText}
+          title={tr("files.empty.title", "No files yet")}
+          hint={tr("files.empty.hint", "Contracts, quotes, mood boards, seating charts…")}
+        />
       ) : (
         <div className="card-lux divide-y">
           {scoped.map((f) => (
@@ -180,13 +191,15 @@ export function FilesSection({ eventId }: { eventId: string }) {
               </div>
               <a
                 href={urlFor(f.path)} target="_blank" rel="noreferrer"
-                className="text-muted-foreground hover:text-foreground" aria-label="Download"
+                className="text-muted-foreground hover:text-foreground"
+                aria-label={tr("files.download", "Download")}
               >
                 <Download className="size-4" />
               </a>
               {(isAdmin || f.uploaded_by === me?.id) && (
                 <Button
-                  size="icon" variant="ghost" className="size-7 text-destructive" aria-label="Delete"
+                  size="icon" variant="ghost" className="size-7 text-destructive"
+                  aria-label={tr("action.delete", "Delete")}
                   onClick={() => remove(f.id, f.path, f.name)}
                 >
                   <Trash2 className="size-3.5" />
@@ -203,6 +216,7 @@ export function FilesSection({ eventId }: { eventId: string }) {
 /* ————— members ————— */
 
 export function MembersSection({ eventId }: { eventId: string }) {
+  const { t: tr } = useLang();
   const { db, isAdmin, profiles, eventMembers, refresh } = useWedding();
   const memberIds = eventMembers.filter((m) => m.event_id === eventId).map((m) => m.profile_id);
 
@@ -224,14 +238,16 @@ export function MembersSection({ eventId }: { eventId: string }) {
             <MemberAvatar profile={p} size="size-9" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{p.full_name}</p>
-              <p className="text-xs capitalize text-muted-foreground">{p.role}</p>
+              <p className="text-xs capitalize text-muted-foreground">
+                {tr("settings.role." + p.role, p.role)}
+              </p>
             </div>
             {isMember && p.phone && (
               <a
                 href={whatsappLink(p.phone)} target="_blank" rel="noreferrer"
                 className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary hover:bg-primary/20 dark:text-primary"
               >
-                <MessageCircle className="size-3.5" /> WhatsApp
+                <MessageCircle className="size-3.5" /> {tr("members.whatsapp", "WhatsApp")}
               </a>
             )}
             {isAdmin && (
@@ -241,9 +257,9 @@ export function MembersSection({ eventId }: { eventId: string }) {
                 onClick={() => toggle(p.id, !isMember)}
               >
                 {isMember ? (
-                  <><UserMinus className="size-4" /> Remove</>
+                  <><UserMinus className="size-4" /> {tr("members.remove", "Remove")}</>
                 ) : (
-                  <><UserPlus className="size-4" /> Add</>
+                  <><UserPlus className="size-4" /> {tr("members.add", "Add")}</>
                 )}
               </Button>
             )}

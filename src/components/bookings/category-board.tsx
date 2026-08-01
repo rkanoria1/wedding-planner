@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CalendarClock, Plus, TriangleAlert } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Booking } from "@/lib/types";
 import {
   BOOKING_CATEGORIES, BOOKING_STATUS_META, BOOKING_URGENCY_META, bookingUrgency,
@@ -25,6 +26,7 @@ export function CategoryBoard({
   onOpenBooking: (b: Booking) => void;
   onAddForCategory: (category: string) => void;
 }) {
+  const { t: tr } = useLang();
   const { bookings, events, settings, isAdmin } = useWedding();
   const weddingDate = settings.wedding_date;
 
@@ -51,6 +53,8 @@ export function CategoryBoard({
         const meta = BOOKING_URGENCY_META[urgency];
         const days = daysUntilBookBy(cat.label, weddingDate);
         const fn = best?.event_id ? events.find((e) => e.id === best.event_id)?.name : null;
+        const urgencyLabel = tr("burgency." + urgency, meta.label);
+        const bookByDate = formatDate(idealBookByDate(cat.label, weddingDate).toISOString(), "d MMM");
 
         return (
           <motion.button
@@ -80,9 +84,9 @@ export function CategoryBoard({
                   <CategoryIcon name={cat.icon} className="size-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold leading-tight">{cat.label}</p>
+                  <p className="text-sm font-semibold leading-tight">{tr("bcat." + cat.label, cat.label)}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Lead time ~{cat.leadMonths} mo
+                    {tr("bookings.board.leadTime", "Lead time ~{n} mo", { n: cat.leadMonths })}
                   </p>
                 </div>
               </div>
@@ -97,7 +101,11 @@ export function CategoryBoard({
                   <div className="flex items-center gap-2">
                     <span className={cn("size-2 rounded-full", BOOKING_STATUS_META[best.status].dot)} />
                     <span className="truncate text-sm">
-                      {best.vendor_name ?? <span className="text-muted-foreground italic">Vendor TBD</span>}
+                      {best.vendor_name ?? (
+                        <span className="text-muted-foreground italic">
+                          {tr("bookings.board.vendorTbd", "Vendor TBD")}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
@@ -107,7 +115,7 @@ export function CategoryBoard({
                         BOOKING_STATUS_META[best.status].className
                       )}
                     >
-                      {BOOKING_STATUS_META[best.status].label}
+                      {tr("bstatus." + best.status, BOOKING_STATUS_META[best.status].label)}
                     </span>
                     {fn && (
                       <span className="truncate text-[11px] text-muted-foreground">{fn}</span>
@@ -115,20 +123,29 @@ export function CategoryBoard({
                   </div>
                 </>
               ) : (
-                <p className="text-sm italic text-muted-foreground">No booking yet</p>
+                <p className="text-sm italic text-muted-foreground">{tr("bookings.board.noBooking", "No booking yet")}</p>
               )}
 
               {/* urgency footer */}
               <div className={cn("mt-3 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium", meta.bg, meta.text)}>
                 {isSecured(best?.status ?? "not_booked") ? (
-                  <>✓ {meta.label}</>
+                  <>✓ {urgencyLabel}</>
                 ) : (
                   <>
                     <CalendarClock className="size-3.5" />
                     {days < 0 ? (
-                      <>Overdue — book by {formatDate(idealBookByDate(cat.label, weddingDate).toISOString(), "d MMM")}</>
+                      <>
+                        {tr("burgency.overdue", "Overdue")} —{" "}
+                        {tr("bookings.board.bookBy", "book by {date}", { date: bookByDate })}
+                      </>
                     ) : (
-                      <>{meta.label} · book by {formatDate(idealBookByDate(cat.label, weddingDate).toISOString(), "d MMM")} ({days}d)</>
+                      <>
+                        {urgencyLabel} ·{" "}
+                        {tr("bookings.board.bookByDays", "book by {date} ({days}d)", {
+                          date: bookByDate,
+                          days,
+                        })}
+                      </>
                     )}
                   </>
                 )}

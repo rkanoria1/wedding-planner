@@ -2,6 +2,7 @@
 
 import { Printer } from "lucide-react";
 import { whatsappShare } from "@/lib/wedding";
+import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 
 /** WhatsApp brand glyph (lucide has no official one). */
@@ -16,13 +17,15 @@ function WhatsAppIcon({ className }: { className?: string }) {
 /** Opens WhatsApp with a pre-filled summary; the user picks the chat/group. */
 export function ShareWhatsApp({
   text,
-  label = "Share on WhatsApp",
+  label,
   size = "sm",
 }: {
   text: string;
   label?: string;
   size?: "sm" | "default";
 }) {
+  const { t: tr } = useLang();
+  const displayLabel = label ?? tr("action.shareWhatsApp", "Share on WhatsApp");
   return (
     <Button
       variant="outline"
@@ -30,13 +33,15 @@ export function ShareWhatsApp({
       className="no-print gap-1.5 border-emerald-600/30 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-400"
       onClick={() => window.open(whatsappShare(text), "_blank", "noopener")}
     >
-      <WhatsAppIcon className="size-4" /> {label}
+      <WhatsAppIcon className="size-4" /> {displayLabel}
     </Button>
   );
 }
 
 /** Triggers the browser print dialog (print CSS strips the app chrome). */
-export function PrintButton({ label = "Print" }: { label?: string }) {
+export function PrintButton({ label }: { label?: string }) {
+  const { t: tr } = useLang();
+  const displayLabel = label ?? tr("action.print", "Print");
   return (
     <Button
       variant="outline"
@@ -44,7 +49,7 @@ export function PrintButton({ label = "Print" }: { label?: string }) {
       className="no-print gap-1.5"
       onClick={() => window.print()}
     >
-      <Printer className="size-4" /> {label}
+      <Printer className="size-4" /> {displayLabel}
     </Button>
   );
 }

@@ -7,6 +7,8 @@ import { Gem, Heart, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { GUEST_EMAIL } from "@/lib/guest";
+import { useLang } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,7 @@ const FAMILY_EMAILS = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t: tr } = useLang();
   const db = createClient();
   const [mode, setMode] = useState<"family" | "guest">("family");
   const [code, setCode] = useState("");
@@ -36,7 +39,7 @@ export default function LoginPage() {
       });
       if (error) {
         setPhase("idle");
-        toast.error("That guest code doesn't match. Please try again.");
+        toast.error(tr("login.toast.guest", "That guest code doesn't match. Please try again."));
         return;
       }
       setPhase("redirecting");
@@ -52,7 +55,7 @@ export default function LoginPage() {
     }
     if (!ok) {
       setPhase("idle");
-      toast.error("That code doesn't match. Please try again.");
+      toast.error(tr("login.toast.family", "That code doesn't match. Please try again."));
       return;
     }
     setPhase("redirecting");
@@ -72,7 +75,7 @@ export default function LoginPage() {
           }}
         />
         <div className="relative flex items-center gap-2 text-sm uppercase tracking-[0.3em] text-white/80">
-          <Gem className="size-4" /> Rahul &amp; Somya
+          <Gem className="size-4" /> {tr("login.brand", "Rahul & Somya")}
         </div>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -80,22 +83,26 @@ export default function LoginPage() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative"
         >
-          <h1 className="font-display text-6xl leading-tight">
-            Every celebration,
-            <br />
-            beautifully <em className="text-amber-200">shared</em>.
+          <h1 className="font-display text-6xl leading-tight whitespace-pre-line">
+            {tr("login.hero.title", "Every celebration,\nbeautifully shared.")}
           </h1>
           <p className="mt-6 max-w-md text-white/75">
-            Family plans the wedding. Guests enjoy the timeline, lookbook,
-            blessings and moments — without the planning clutter.
+            {tr(
+              "login.hero.sub",
+              "Family plans the wedding. Guests enjoy the timeline, lookbook, blessings and moments — without the planning clutter."
+            )}
           </p>
         </motion.div>
         <div className="relative flex items-center gap-2 text-sm text-white/60">
-          <Heart className="size-4 fill-current" /> Rahul &amp; Somya · 29 January 2027
+          <Heart className="size-4 fill-current" />{" "}
+          {tr("login.footer", "Rahul & Somya · 29 January 2027")}
         </div>
       </div>
 
-      <div className="flex items-center justify-center bg-celebration p-6">
+      <div className="relative flex items-center justify-center bg-celebration p-6">
+        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+          <LanguageToggle />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -107,12 +114,14 @@ export default function LoginPage() {
               <KeyRound className="size-7" />
             </div>
             <h2 className="font-display text-3xl">
-              {mode === "family" ? "Welcome, family" : "Welcome, guest"}
+              {mode === "family"
+                ? tr("login.welcome.family", "Welcome, family")
+                : tr("login.welcome.guest", "Welcome, guest")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "family"
-                ? "Enter the family access code to open the planner."
-                : "Enter the wedding guest code for the celebration portal."}
+                ? tr("login.sub.family", "Enter the family access code to open the planner.")
+                : tr("login.sub.guest", "Enter the wedding guest code for the celebration portal.")}
             </p>
           </div>
 
@@ -123,11 +132,13 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => { setMode(m); setCode(""); }}
                 className={cn(
-                  "rounded-lg py-2 text-sm font-medium capitalize transition-colors",
+                  "rounded-lg py-2 text-sm font-medium transition-colors",
                   mode === m ? "bg-background shadow-sm" : "text-muted-foreground"
                 )}
               >
-                {m}
+                {m === "family"
+                  ? tr("login.mode.family", "Family")
+                  : tr("login.mode.guest", "Guest")}
               </button>
             ))}
           </div>
@@ -137,22 +148,34 @@ export default function LoginPage() {
               autoFocus
               type="password"
               required
-              placeholder={mode === "family" ? "Family access code" : "Guest access code"}
-              aria-label={mode === "family" ? "Family access code" : "Guest access code"}
+              placeholder={
+                mode === "family"
+                  ? tr("login.ph.family", "Family access code")
+                  : tr("login.ph.guest", "Guest access code")
+              }
+              aria-label={
+                mode === "family"
+                  ? tr("login.ph.family", "Family access code")
+                  : tr("login.ph.guest", "Guest access code")
+              }
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className="h-12 text-center text-lg tracking-widest"
             />
             <Button type="submit" className="h-12 w-full text-base" disabled={busy || !code}>
               {busy && <Loader2 className="size-4 animate-spin" />}
-              {phase === "idle" ? "Enter" : phase === "checking" ? "Checking…" : "Opening…"}
+              {phase === "idle"
+                ? tr("login.enter", "Enter")
+                : phase === "checking"
+                  ? tr("login.checking", "Checking…")
+                  : tr("login.opening", "Opening…")}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             {mode === "family"
-              ? "Ask Rahul or Somya for the family code."
-              : "Ask the couple for the shared guest code."}
+              ? tr("login.hint.family", "Ask Rahul or Somya for the family code.")
+              : tr("login.hint.guest", "Ask the couple for the shared guest code.")}
           </p>
         </motion.div>
       </div>
@@ -177,9 +200,13 @@ export default function LoginPage() {
           </div>
           <div className="relative text-center">
             <p className="font-display text-2xl">
-              {mode === "family" ? "Opening your planner…" : "Opening the celebration…"}
+              {mode === "family"
+                ? tr("login.redirect.family", "Opening your planner…")
+                : tr("login.redirect.guest", "Opening the celebration…")}
             </p>
-            <p className="mt-1 text-sm text-white/70">Just a moment ✨</p>
+            <p className="mt-1 text-sm text-white/70">
+              {tr("login.redirect.wait", "Just a moment ✨")}
+            </p>
           </div>
         </motion.div>
       )}

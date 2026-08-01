@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import type { BookingStatus } from "@/lib/types";
 import { BOOKING_STATUS_META, BOOKING_STATUS_ORDER } from "@/lib/bookings";
+import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,6 +20,7 @@ export function StatusStepper({
   onChange?: (s: BookingStatus) => void;
   size?: "sm" | "md";
 }) {
+  const { t: tr } = useLang();
   const currentStep =
     status === "cancelled" ? -1 : BOOKING_STATUS_META[status].step;
   const interactive = Boolean(onChange);
@@ -29,6 +31,7 @@ export function StatusStepper({
     <div className={cn("flex items-center", gap)}>
       {BOOKING_STATUS_ORDER.map((s, i) => {
         const meta = BOOKING_STATUS_META[s];
+        const label = tr("bstatus." + s, meta.label);
         const reached = currentStep >= meta.step;
         const isCurrent = currentStep === meta.step;
         return (
@@ -37,8 +40,8 @@ export function StatusStepper({
               type="button"
               disabled={!interactive}
               onClick={() => onChange?.(s)}
-              aria-label={meta.label}
-              title={meta.label}
+              aria-label={label}
+              title={label}
               className={cn(
                 "relative flex shrink-0 items-center justify-center rounded-full border-2 transition-all",
                 dot,

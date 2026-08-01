@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 /** English / Hindi switch — many family members read Hindi far more easily. */
 export function LanguageToggle() {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t: tr } = useLang();
   return (
-    <div className="flex rounded-full border bg-card p-0.5" role="group" aria-label="Language">
+    <div className="flex rounded-full border bg-card p-0.5" role="group" aria-label={tr("lang.toggle", "Language")}>
       {(["en", "hi"] as const).map((l) => (
         <button
           key={l}

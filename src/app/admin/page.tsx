@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { useLang } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,6 +21,7 @@ const ADMIN_EMAIL =
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { t: tr } = useLang();
   const db = createClient();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,7 +32,7 @@ export default function AdminLoginPage() {
     const { error } = await db.auth.signInWithPassword({ email: ADMIN_EMAIL, password: code });
     if (error) {
       setBusy(false);
-      toast.error("Incorrect admin passcode.");
+      toast.error(tr("admin.toast.bad", "Incorrect admin passcode."));
       return;
     }
     // keep the spinner through the redirect + data load
@@ -39,6 +42,9 @@ export default function AdminLoginPage() {
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#1a0710] p-6">
+      <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
+        <LanguageToggle />
+      </div>
       {/* deep oversight backdrop */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -56,9 +62,9 @@ export default function AdminLoginPage() {
         <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-gold/15 text-gold ring-1 ring-gold/30">
           <ShieldCheck className="size-7" />
         </div>
-        <h1 className="font-display text-3xl text-white">Oversight</h1>
+        <h1 className="font-display text-3xl text-white">{tr("admin.title", "Oversight")}</h1>
         <p className="mt-1 text-sm text-white/60">
-          Admin access to both families&apos; planning.
+          {tr("admin.sub", "Admin access to both families' planning.")}
         </p>
 
         <form onSubmit={handleAccess} className="mt-8 space-y-4">
@@ -66,8 +72,8 @@ export default function AdminLoginPage() {
             autoFocus
             type="password"
             required
-            placeholder="Admin passcode"
-            aria-label="Admin passcode"
+            placeholder={tr("admin.ph", "Admin passcode")}
+            aria-label={tr("admin.ph", "Admin passcode")}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className="h-12 border-white/15 bg-white/5 text-center text-lg tracking-widest text-white placeholder:text-white/40"
@@ -77,12 +83,12 @@ export default function AdminLoginPage() {
             disabled={busy || !code}
             className="h-12 w-full bg-gold text-gold-foreground text-base hover:bg-gold/90"
           >
-            {busy && <Loader2 className="size-4 animate-spin" />} Enter
+            {busy && <Loader2 className="size-4 animate-spin" />} {tr("admin.enter", "Enter")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-xs text-white/35">
-          Restricted. Family members use the main sign-in.
+          {tr("admin.hint", "Restricted. Family members use the main sign-in.")}
         </p>
       </motion.div>
     </div>

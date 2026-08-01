@@ -107,7 +107,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               <Link
                 href="/settings?tab=events"
                 onClick={onNavigate}
-                aria-label="Add event"
+                aria-label={t("shell.addEvent", "Add event")}
                 className="text-sidebar-foreground/50 hover:text-sidebar-primary"
               >
                 <Plus className="size-4" />
@@ -136,7 +136,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           })}
           {activeEvents.length === 0 && (
             <p className="px-3 py-2 text-xs text-sidebar-foreground/50">
-              No events yet — add one in Settings.
+              {t("nav.noEvents", "No events yet — add one in Settings.")}
             </p>
           )}
         </div>
@@ -148,10 +148,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <MemberAvatar profile={me} size="size-9" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{me.full_name}</p>
-            <p className="text-[11px] capitalize text-sidebar-foreground/60">{me.role}</p>
+            <p className="text-[11px] capitalize text-sidebar-foreground/60">
+              {t("settings.role." + me.role, me.role)}
+            </p>
           </div>
           <Button
-            variant="ghost" size="icon" aria-label="Sign out"
+            variant="ghost" size="icon" aria-label={t("action.signOut", "Sign out")}
             className="text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             onClick={signOut}
           >

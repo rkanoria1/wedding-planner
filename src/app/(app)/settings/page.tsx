@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Archive, CalendarDays, Pencil, Plus, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { UserRole, WeddingEvent } from "@/lib/types";
 import { EVENT_THEMES, formatDate } from "@/lib/wedding";
 import { EventDialog } from "@/components/events/event-dialog";
@@ -24,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 function SettingsPageInner() {
+  const { t: tr } = useLang();
   const params = useSearchParams();
   const { db, me, isAdmin, settings, profiles, events, refresh, logActivity } = useWedding();
 
@@ -51,8 +53,8 @@ function SettingsPageInner() {
     const { error } = await db.from("app_settings").update(general).eq("id", 1);
     if (error) return toast.error(error.message);
     refresh("app_settings");
-    await logActivity("updated", "settings", "wedding settings");
-    toast.success("Settings saved");
+    await logActivity("updated", "settings", tr("settings.log.wedding", "wedding settings"));
+    toast.success(tr("settings.toast.saved", "Settings saved"));
   }
 
   /* profile */
@@ -69,14 +71,14 @@ function SettingsPageInner() {
       .eq("id", me.id);
     if (error) return toast.error(error.message);
     refresh("profiles");
-    toast.success("Profile updated");
+    toast.success(tr("settings.toast.profile", "Profile updated"));
   }
 
   async function setRole(profileId: string, role: UserRole) {
     const { error } = await db.from("profiles").update({ role }).eq("id", profileId);
     if (error) return toast.error(error.message);
     refresh("profiles");
-    toast.success("Role updated");
+    toast.success(tr("settings.toast.role", "Role updated"));
   }
 
   /* events */
@@ -85,21 +87,30 @@ function SettingsPageInner() {
     event: null,
   });
 
+  const roleLabel = (role: string) => {
+    if (role === "admin") return tr("settings.role.admin", "Admin");
+    if (role === "family") return tr("settings.role.family", "Family");
+    if (role === "volunteer") return tr("settings.role.volunteer", "Volunteer");
+    return role;
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <div>
-        <h1 className="font-display text-3xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">Wedding details, events, members and your profile.</p>
+        <h1 className="font-display text-3xl">{tr("page.settings", "Settings")}</h1>
+        <p className="text-sm text-muted-foreground">
+          {tr("page.settings.sub", "Wedding details, events, members and your profile.")}
+        </p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="guest">Guest posts</TabsTrigger>
-          <TabsTrigger value="profile">My Profile</TabsTrigger>
+          <TabsTrigger value="general">{tr("settings.tab.general", "General")}</TabsTrigger>
+          <TabsTrigger value="events">{tr("settings.tab.events", "Events")}</TabsTrigger>
+          <TabsTrigger value="members">{tr("settings.tab.members", "Members")}</TabsTrigger>
+          <TabsTrigger value="notes">{tr("settings.tab.notes", "Notes")}</TabsTrigger>
+          <TabsTrigger value="guest">{tr("settings.tab.guest", "Guest posts")}</TabsTrigger>
+          <TabsTrigger value="profile">{tr("settings.tab.profile", "My Profile")}</TabsTrigger>
         </TabsList>
 
         {/* general */}
@@ -107,12 +118,13 @@ function SettingsPageInner() {
           <Card className="card-lux shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-display text-lg font-normal">
-                <CalendarDays className="size-5 text-gold" /> Wedding details
+                <CalendarDays className="size-5 text-gold" />{" "}
+                {tr("settings.weddingDetails", "Wedding details")}
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label>Couple names</Label>
+                <Label>{tr("settings.field.couple", "Couple names")}</Label>
                 <Input
                   value={general.couple_names}
                   disabled={!isAdmin}
@@ -120,14 +132,14 @@ function SettingsPageInner() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Wedding date</Label>
+                <Label>{tr("settings.field.weddingDate", "Wedding date")}</Label>
                 <Input
                   type="date" value={general.wedding_date} disabled={!isAdmin}
                   onChange={(e) => setGeneral({ ...general, wedding_date: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Planning started</Label>
+                <Label>{tr("settings.field.planningStart", "Planning started")}</Label>
                 <Input
                   type="date" value={general.planning_start} disabled={!isAdmin}
                   onChange={(e) => setGeneral({ ...general, planning_start: e.target.value })}
@@ -135,7 +147,7 @@ function SettingsPageInner() {
               </div>
               {isAdmin && (
                 <div className="flex items-end">
-                  <Button onClick={saveGeneral}>Save settings</Button>
+                  <Button onClick={saveGeneral}>{tr("settings.save", "Save settings")}</Button>
                 </div>
               )}
             </CardContent>
@@ -146,7 +158,7 @@ function SettingsPageInner() {
         <TabsContent value="events" className="mt-4 space-y-4">
           {isAdmin && (
             <Button onClick={() => setEventDialog({ open: true, event: null })}>
-              <Plus className="size-4" /> New celebration
+              <Plus className="size-4" /> {tr("settings.newCelebration", "New celebration")}
             </Button>
           )}
           <div className="card-lux divide-y">
@@ -160,7 +172,7 @@ function SettingsPageInner() {
                     {e.name}
                     {e.archived && (
                       <Badge variant="outline" className="gap-1">
-                        <Archive className="size-3" /> Archived
+                        <Archive className="size-3" /> {tr("settings.archived", "Archived")}
                       </Badge>
                     )}
                   </p>
@@ -170,7 +182,7 @@ function SettingsPageInner() {
                 </div>
                 {isAdmin && (
                   <Button
-                    size="icon" variant="ghost" aria-label={`Edit ${e.name}`}
+                    size="icon" variant="ghost" aria-label={`${tr("action.edit", "Edit")} ${e.name}`}
                     onClick={() => setEventDialog({ open: true, event: e })}
                   >
                     <Pencil className="size-4" />
@@ -189,21 +201,26 @@ function SettingsPageInner() {
                 <MemberAvatar profile={p} size="size-9" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">
-                    {p.full_name} {p.id === me?.id && <span className="text-muted-foreground">(you)</span>}
+                    {p.full_name}{" "}
+                    {p.id === me?.id && (
+                      <span className="text-muted-foreground">{tr("misc.you", "(you)")}</span>
+                    )}
                   </p>
-                  <p className="text-xs text-muted-foreground">{p.phone ?? "No phone"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.phone ?? tr("settings.noPhone", "No phone")}
+                  </p>
                 </div>
                 {isAdmin && p.id !== me?.id ? (
                   <Select value={p.role} onValueChange={(v) => setRole(p.id, v as UserRole)}>
                     <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="family">Family</SelectItem>
-                      <SelectItem value="volunteer">Volunteer</SelectItem>
+                      <SelectItem value="admin">{tr("settings.role.admin", "Admin")}</SelectItem>
+                      <SelectItem value="family">{tr("settings.role.family", "Family")}</SelectItem>
+                      <SelectItem value="volunteer">{tr("settings.role.volunteer", "Volunteer")}</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Badge variant="outline" className="capitalize">{p.role}</Badge>
+                  <Badge variant="outline">{roleLabel(p.role)}</Badge>
                 )}
               </div>
             ))}
@@ -223,25 +240,27 @@ function SettingsPageInner() {
         <TabsContent value="profile" className="mt-4">
           <Card className="card-lux shadow-none">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-normal">My profile</CardTitle>
+              <CardTitle className="font-display text-lg font-normal">
+                {tr("settings.myProfile", "My profile")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Full name</Label>
+                <Label>{tr("settings.field.fullName", "Full name")}</Label>
                 <Input
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone (WhatsApp)</Label>
+                <Label>{tr("settings.field.phone", "Phone (WhatsApp)")}</Label>
                 <Input
                   value={profile.phone} placeholder="+91…"
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 />
               </div>
               <div>
-                <Button onClick={saveProfile}>Save profile</Button>
+                <Button onClick={saveProfile}>{tr("settings.saveProfile", "Save profile")}</Button>
               </div>
             </CardContent>
           </Card>

@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Camera, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Photo } from "@/lib/types";
 import { getGuestDisplayName } from "@/lib/guest";
 import { storageKey } from "@/lib/storage";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function GuestMomentsPage() {
+  const { t: tr } = useLang();
   const { db, me, photos, refresh } = useWedding();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -25,7 +27,7 @@ export default function GuestMomentsPage() {
 
   async function upload(files: FileList) {
     const author = getGuestDisplayName();
-    if (!author) return toast.error("Please set your name first");
+    if (!author) return toast.error(tr("guest.moments.toast.name", "Please set your name first"));
     setBusy(true);
     for (const original of Array.from(files)) {
       if (!original.type.startsWith("image/")) continue;
@@ -48,17 +50,19 @@ export default function GuestMomentsPage() {
     }
     refresh("photos");
     setBusy(false);
-    toast.success("Photos shared ✨");
+    toast.success(tr("guest.moments.toast.ok", "Photos shared ✨"));
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Album</p>
-          <h1 className="font-display text-3xl">Moments</h1>
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            {tr("guest.moments.eyebrow", "Album")}
+          </p>
+          <h1 className="font-display text-3xl">{tr("guest.moments", "Moments")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Share photos from the celebrations.
+            {tr("guest.moments.sub", "Share photos from the celebrations.")}
           </p>
         </div>
         <div>
@@ -75,7 +79,7 @@ export default function GuestMomentsPage() {
           />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-            Add photos
+            {tr("guest.moments.add", "Add photos")}
           </Button>
         </div>
       </div>
@@ -83,8 +87,8 @@ export default function GuestMomentsPage() {
       {visible.length === 0 ? (
         <EmptyState
           icon={Camera}
-          title="No moments yet"
-          hint="Be the first to upload a photo."
+          title={tr("guest.moments.empty.title", "No moments yet")}
+          hint={tr("guest.moments.empty.hint", "Be the first to upload a photo.")}
         />
       ) : (
         <div className="columns-2 gap-3 sm:columns-3">
@@ -113,7 +117,7 @@ export default function GuestMomentsPage() {
                 className="max-h-[80vh] w-full rounded-2xl object-contain"
               />
               <p className="mt-2 text-center text-sm text-white/90 drop-shadow">
-                {lightbox.author_label || lightbox.caption || "Moment"}
+                {lightbox.author_label || lightbox.caption || tr("guest.moments", "Moment")}
               </p>
             </div>
           )}

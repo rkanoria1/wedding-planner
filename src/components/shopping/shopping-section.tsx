@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { ShoppingItem } from "@/lib/types";
 import { shoppingProgress } from "@/lib/wedding";
 import { GradientBar } from "@/components/shared/gradient-bar";
@@ -33,6 +34,7 @@ export const SHOPPING_CATEGORIES = [
 ];
 
 export function ShoppingSection({ eventId, openNew = false }: { eventId?: string | null; openNew?: boolean }) {
+  const { t: tr } = useLang();
   const {
     db, me, isAdmin, shoppingItems, events, profiles, refresh, logActivity, notify,
   } = useWedding();
@@ -80,7 +82,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
   }
 
   async function save() {
-    if (!form.name.trim()) return toast.error("Item needs a name");
+    if (!form.name.trim()) return toast.error(tr("shopping.toast.needName", "Item needs a name"));
     const payload = {
       name: form.name.trim(),
       category: form.category,
@@ -99,17 +101,19 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
       if (error) return toast.error(error.message);
       await logActivity("added", "shopping_item", payload.name);
       if (payload.assigned_to && payload.assigned_to !== me?.id) {
-        notify(payload.assigned_to, "Shopping assigned to you", payload.name, "/shopping");
+        notify(payload.assigned_to, tr("shopping.notify.assigned", "Shopping assigned to you"), payload.name, "/shopping");
       }
     }
     refresh("shopping_items");
     setDialogOpen(false);
     setForm(empty);
-    toast.success(editing ? "Item updated" : "Item added");
+    toast.success(editing
+      ? tr("shopping.toast.updated", "Item updated")
+      : tr("shopping.toast.added", "Item added"));
   }
 
   async function togglePurchased(item: ShoppingItem) {
-    if (!canEditItem(item)) return toast.error("Only admins or the assigned member can update this");
+    if (!canEditItem(item)) return toast.error(tr("shopping.toast.forbidden", "Only admins or the assigned member can update this"));
     const { error } = await db
       .from("shopping_items")
       .update({ purchased: !item.purchased })
@@ -128,14 +132,14 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
   }
 
   const eventName = (id: string | null) =>
-    id ? events.find((e) => e.id === id)?.name ?? "—" : "General";
+    id ? events.find((e) => e.id === id)?.name ?? "—" : tr("misc.general", "General");
 
   return (
     <div className="space-y-5">
       <Card className="card-lux shadow-none">
         <CardContent className="flex flex-wrap items-center gap-6 pt-6">
           <div>
-            <p className="text-xs text-muted-foreground">Bought</p>
+            <p className="text-xs text-muted-foreground">{tr("shopping.bought", "Bought")}</p>
             <p className="font-display text-2xl">
               {scopedAll.filter((i) => i.purchased).length}/{scopedAll.length}
             </p>
@@ -144,7 +148,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
             <GradientBar value={shoppingProgress(scopedAll)} />
           </div>
           <p className="text-sm text-muted-foreground">
-            Checklist only — tick items as they are bought.
+            {tr("shopping.checklistHint", "Checklist only — tick items as they are bought.")}
           </p>
         </CardContent>
       </Card>
@@ -153,42 +157,46 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
         <Select value={catFilter} onValueChange={setCatFilter}>
           <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
+            <SelectItem value="all">{tr("shopping.filter.allCategories", "All categories")}</SelectItem>
             {SHOPPING_CATEGORIES.map((c) => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem key={c} value={c}>{tr("shopping.cat." + c, c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All items</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="purchased">Bought</SelectItem>
+            <SelectItem value="all">{tr("shopping.filter.allItems", "All items")}</SelectItem>
+            <SelectItem value="pending">{tr("shopping.filter.pending", "Pending")}</SelectItem>
+            <SelectItem value="purchased">{tr("shopping.filter.bought", "Bought")}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex-1" />
         {isAdmin && (
           <Button onClick={() => { setForm(empty); setDialogOpen(true); }}>
-            <Plus className="size-4" /> Add item
+            <Plus className="size-4" /> {tr("shopping.addItem", "Add item")}
           </Button>
         )}
       </div>
 
       {scoped.length === 0 ? (
-        <EmptyState icon={ShoppingBag} title="Nothing here yet" hint="Add items to build the shopping checklist." />
+        <EmptyState
+          icon={ShoppingBag}
+          title={tr("shopping.empty.title", "Nothing here yet")}
+          hint={tr("shopping.empty.hint", "Add items to build the shopping checklist.")}
+        />
       ) : (
         <div className="card-lux overflow-x-auto scrollbar-thin">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10" />
-                <TableHead>Item</TableHead>
-                <TableHead>Category</TableHead>
-                {eventId === undefined && <TableHead>Event</TableHead>}
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead>Store</TableHead>
-                <TableHead>Assigned</TableHead>
+                <TableHead>{tr("shopping.col.item", "Item")}</TableHead>
+                <TableHead>{tr("shopping.col.category", "Category")}</TableHead>
+                {eventId === undefined && <TableHead>{tr("shopping.col.event", "Event")}</TableHead>}
+                <TableHead className="text-right">{tr("shopping.col.qty", "Qty")}</TableHead>
+                <TableHead>{tr("shopping.col.store", "Store")}</TableHead>
+                <TableHead>{tr("shopping.col.assigned", "Assigned")}</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -203,7 +211,9 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                     <TableCell>
                       <button
                         onClick={() => togglePurchased(item)}
-                        aria-label={item.purchased ? "Mark pending" : "Mark bought"}
+                        aria-label={item.purchased
+                          ? tr("shopping.markPending", "Mark pending")
+                          : tr("shopping.markBought", "Mark bought")}
                       >
                         {item.purchased ? (
                           <CheckCircle2 className="size-5 text-primary" />
@@ -224,7 +234,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.category}</Badge>
+                      <Badge variant="outline">{tr("shopping.cat." + item.category, item.category)}</Badge>
                     </TableCell>
                     {eventId === undefined && (
                       <TableCell className="text-sm text-muted-foreground">
@@ -241,7 +251,7 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
                     {isAdmin && (
                       <TableCell>
                         <Button
-                          size="icon" variant="ghost" className="size-7 text-destructive" aria-label="Delete"
+                          size="icon" variant="ghost" className="size-7 text-destructive" aria-label={tr("action.delete", "Delete")}
                           onClick={() => remove(item)}
                         >
                           <Trash2 className="size-3.5" />
@@ -260,39 +270,45 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display font-normal">
-              {editing ? "Edit item" : "Add shopping item"}
+              {editing
+                ? tr("shopping.dialog.edit", "Edit item")
+                : tr("shopping.dialog.add", "Add shopping item")}
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label>Item name</Label>
+              <Label>{tr("shopping.field.name", "Item name")}</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{tr("shopping.field.category", "Category")}</Label>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SHOPPING_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>{tr("shopping.cat." + c, c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Quantity</Label>
+              <Label>{tr("shopping.field.qty", "Quantity")}</Label>
               <Input type="number" min={1} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Store</Label>
-              <Input value={form.store} onChange={(e) => setForm({ ...form, store: e.target.value })} placeholder="Where to buy" />
+              <Label>{tr("shopping.field.store", "Store")}</Label>
+              <Input
+                value={form.store}
+                onChange={(e) => setForm({ ...form, store: e.target.value })}
+                placeholder={tr("shopping.ph.store", "Where to buy")}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Assigned to</Label>
+              <Label>{tr("shopping.field.assigned", "Assigned to")}</Label>
               <Select value={form.assigned_to} onValueChange={(v) => setForm({ ...form, assigned_to: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
+                  <SelectItem value="none">{tr("shopping.unassigned", "Unassigned")}</SelectItem>
                   {profiles.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
                   ))}
@@ -301,11 +317,11 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
             </div>
             {eventId === undefined && (
               <div className="space-y-2">
-                <Label>Event</Label>
+                <Label>{tr("shopping.field.event", "Event")}</Label>
                 <Select value={form.event_id} onValueChange={(v) => setForm({ ...form, event_id: v })}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">General</SelectItem>
+                    <SelectItem value="none">{tr("misc.general", "General")}</SelectItem>
                     {events.filter((e) => !e.archived).map((e) => (
                       <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                     ))}
@@ -314,11 +330,13 @@ export function ShoppingSection({ eventId, openNew = false }: { eventId?: string
               </div>
             )}
             <div className="col-span-2 space-y-2">
-              <Label>Notes</Label>
+              <Label>{tr("shopping.field.notes", "Notes")}</Label>
               <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <Button className="col-span-2" onClick={save}>
-              {editing ? "Save changes" : "Add item"}
+              {editing
+                ? tr("shopping.save", "Save changes")
+                : tr("shopping.addItem", "Add item")}
             </Button>
           </div>
         </DialogContent>

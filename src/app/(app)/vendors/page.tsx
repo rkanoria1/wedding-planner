@@ -8,8 +8,9 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Vendor } from "@/lib/types";
-import { whatsappLink } from "@/lib/wedding";
+import { formatDate, whatsappLink } from "@/lib/wedding";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ function Stars({
   value: number | null;
   onChange?: (v: number) => void;
 }) {
+  const { t: tr } = useLang();
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
@@ -46,7 +48,7 @@ function Stars({
           type="button"
           disabled={!onChange}
           onClick={() => onChange?.(i)}
-          aria-label={`${i} stars`}
+          aria-label={tr("vendors.stars", "{n} stars", { n: i })}
         >
           <Star
             className={cn(
@@ -63,8 +65,9 @@ function Stars({
 }
 
 function VendorsPageInner() {
+  const { t: tr } = useLang();
   const params = useSearchParams();
-  const { db, isAdmin, vendors, refresh, logActivity } = useWedding();
+  const { db, isAdmin, vendors, settings, refresh, logActivity } = useWedding();
 
   const [catFilter, setCatFilter] = useState("all");
   const empty = {
@@ -91,7 +94,7 @@ function VendorsPageInner() {
   }
 
   async function save() {
-    if (!form.name.trim()) return toast.error("Vendor needs a name");
+    if (!form.name.trim()) return toast.error(tr("vendors.toast.needName", "Vendor needs a name"));
     const payload = {
       name: form.name.trim(), category: form.category,
       phone: form.phone.trim() || null,
@@ -110,7 +113,11 @@ function VendorsPageInner() {
     refresh("vendors");
     setDialogOpen(false);
     setForm(empty);
-    toast.success(editing ? "Vendor updated" : "Vendor added");
+    toast.success(
+      editing
+        ? tr("vendors.toast.updated", "Vendor updated")
+        : tr("vendors.toast.added", "Vendor added")
+    );
   }
 
   async function toggleBooked(v: Vendor) {
@@ -134,31 +141,38 @@ function VendorsPageInner() {
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Vendors</h1>
+          <h1 className="font-display text-3xl">{tr("page.vendors", "Vendors")}</h1>
           <p className="text-sm text-muted-foreground">
-            {bookedCount} of {vendors.length} booked
+            {tr("vendors.sub", "{booked} of {total} booked", {
+              booked: bookedCount,
+              total: vendors.length,
+            })}
           </p>
         </div>
         <div className="flex gap-2">
           <Select value={catFilter} onValueChange={setCatFilter}>
             <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">{tr("vendors.filter.allCategories", "All categories")}</SelectItem>
               {VENDOR_CATEGORIES.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+                <SelectItem key={c} value={c}>{tr(`vendors.cat.${c}`, c)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           {isAdmin && (
             <Button onClick={() => { setForm(empty); setDialogOpen(true); }}>
-              <Plus className="size-4" /> Add vendor
+              <Plus className="size-4" /> {tr("action.addVendor", "Add vendor")}
             </Button>
           )}
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={Store} title="No vendors yet" hint="Add photographers, caterers, decorators…" />
+        <EmptyState
+          icon={Store}
+          title={tr("vendors.empty.title", "No vendors yet")}
+          hint={tr("vendors.empty.hint", "Add photographers, caterers, decorators…")}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((v, i) => (
@@ -173,15 +187,17 @@ function VendorsPageInner() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-display text-lg leading-tight">{v.name}</p>
-                      <Badge variant="outline" className="mt-1">{v.category}</Badge>
+                      <Badge variant="outline" className="mt-1">
+                        {tr(`vendors.cat.${v.category}`, v.category)}
+                      </Badge>
                     </div>
                     {v.booked ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:text-primary">
-                        <BadgeCheck className="size-3.5" /> Booked
+                        <BadgeCheck className="size-3.5" /> {tr("vendors.badge.booked", "Booked")}
                       </span>
                     ) : (
                       <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-                        Exploring
+                        {tr("vendors.badge.exploring", "Exploring")}
                       </span>
                     )}
                   </div>
@@ -198,15 +214,20 @@ function VendorsPageInner() {
                         <a
                           href={`tel:${v.phone}`}
                           className="inline-flex size-8 items-center justify-center rounded-full border text-muted-foreground hover:bg-accent"
-                          aria-label="Call"
+                          aria-label={tr("action.call", "Call")}
                         >
                           <Phone className="size-3.5" />
                         </a>
                         <a
-                          href={whatsappLink(v.phone, `Hi! Regarding the wedding on 15 Jan 2027 —`)}
+                          href={whatsappLink(
+                            v.phone,
+                            tr("wa.vendor", "Hi! Regarding the wedding on {date} —", {
+                              date: formatDate(settings.wedding_date, "d MMM yyyy"),
+                            })
+                          )}
                           target="_blank" rel="noreferrer"
                           className="inline-flex size-8 items-center justify-center rounded-full border text-primary hover:bg-primary/10 dark:text-primary"
-                          aria-label="WhatsApp"
+                          aria-label={tr("action.whatsapp", "WhatsApp")}
                         >
                           <MessageCircle className="size-3.5" />
                         </a>
@@ -216,13 +237,13 @@ function VendorsPageInner() {
                     {isAdmin && (
                       <>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-muted-foreground">Booked</span>
+                          <span className="text-xs text-muted-foreground">{tr("vendors.label.booked", "Booked")}</span>
                           <Switch checked={v.booked} onCheckedChange={() => toggleBooked(v)} />
                         </div>
-                        <Button size="icon" variant="ghost" className="size-7" aria-label="Edit" onClick={() => openEdit(v)}>
+                        <Button size="icon" variant="ghost" className="size-7" aria-label={tr("action.edit", "Edit")} onClick={() => openEdit(v)}>
                           <Pencil className="size-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="size-7 text-destructive" aria-label="Delete" onClick={() => remove(v)}>
+                        <Button size="icon" variant="ghost" className="size-7 text-destructive" aria-label={tr("action.delete", "Delete")} onClick={() => remove(v)}>
                           <Trash2 className="size-3.5" />
                         </Button>
                       </>
@@ -239,43 +260,47 @@ function VendorsPageInner() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display font-normal">
-              {editing ? "Edit vendor" : "Add vendor"}
+              {editing
+                ? tr("vendors.dialog.edit", "Edit vendor")
+                : tr("vendors.dialog.add", "Add vendor")}
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label>Vendor name</Label>
+              <Label>{tr("vendors.field.name", "Vendor name")}</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{tr("vendors.field.category", "Category")}</Label>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {VENDOR_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>{tr(`vendors.cat.${c}`, c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{tr("vendors.field.phone", "Phone")}</Label>
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91…" />
             </div>
             <div className="space-y-2">
-              <Label>Rating</Label>
+              <Label>{tr("vendors.field.rating", "Rating")}</Label>
               <Stars value={form.rating || null} onChange={(r) => setForm({ ...form, rating: r })} />
             </div>
             <div className="flex items-center gap-2 pt-6">
               <Switch checked={form.booked} onCheckedChange={(v) => setForm({ ...form, booked: v })} />
-              <Label>Booked</Label>
+              <Label>{tr("vendors.label.booked", "Booked")}</Label>
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Notes</Label>
+              <Label>{tr("vendors.field.notes", "Notes")}</Label>
               <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <Button className="col-span-2" onClick={save}>
-              {editing ? "Save changes" : "Add vendor"}
+              {editing
+                ? tr("vendors.save", "Save changes")
+                : tr("action.addVendor", "Add vendor")}
             </Button>
           </div>
         </DialogContent>

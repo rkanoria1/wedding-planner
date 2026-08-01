@@ -5,6 +5,7 @@ import {
 } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Task, TaskStatus } from "@/lib/types";
 import { STATUS_META, STATUS_ORDER, fireConfetti } from "@/lib/wedding";
 import { TaskCard } from "./task-card";
@@ -17,6 +18,7 @@ export function KanbanBoard({
   tasks: Task[];
   onOpen: (id: string) => void;
 }) {
+  const { t: tr } = useLang();
   const { db, me, isAdmin, taskAssignees, refresh, logActivity } = useWedding();
 
   function canMove(task: Task) {
@@ -32,7 +34,7 @@ export function KanbanBoard({
     const task = tasks.find((t) => t.id === draggableId);
     if (!task) return;
     if (!canMove(task)) {
-      toast.error("You can only move tasks assigned to you");
+      toast.error(tr("task.toast.moveDenied", "You can only move tasks assigned to you"));
       return;
     }
     const status = destination.droppableId as TaskStatus;
@@ -45,7 +47,7 @@ export function KanbanBoard({
     await logActivity(
       status === "completed" ? "completed" : "moved",
       "task",
-      status === "completed" ? task.name : `${task.name} → ${STATUS_META[status].label}`,
+      status === "completed" ? task.name : `${task.name} → ${tr("status." + status, STATUS_META[status].label)}`,
       task.id
     );
     refresh("tasks");
@@ -74,7 +76,7 @@ export function KanbanBoard({
                         STATUS_META[status].className
                       )}
                     >
-                      {STATUS_META[status].label}
+                      {tr("status." + status, STATUS_META[status].label)}
                     </span>
                     <span className="text-xs tabular-nums text-muted-foreground">
                       {column.length}

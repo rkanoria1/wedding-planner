@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { Bell, CheckCheck } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function NotificationCenter() {
   const router = useRouter();
+  const { t: tr } = useLang();
   const { db, notifications, refresh } = useWedding();
   const unread = notifications.filter((n) => !n.read);
 
@@ -31,7 +33,14 @@ export function NotificationCenter() {
   return (
     <Popover>
       <PopoverTrigger
-        render={<Button variant="ghost" size="icon" aria-label="Notifications" className="relative" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={tr("notif.aria", "Notifications")}
+            className="relative"
+          />
+        }
       >
         <Bell className="size-5" />
         {unread.length > 0 && (
@@ -42,15 +51,15 @@ export function NotificationCenter() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 p-0">
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="font-display">Notifications</p>
+          <p className="font-display">{tr("notif.title", "Notifications")}</p>
           <Button variant="ghost" size="sm" onClick={markAllRead} disabled={unread.length === 0}>
-            <CheckCheck className="size-4" /> Mark all read
+            <CheckCheck className="size-4" /> {tr("notif.markAll", "Mark all read")}
           </Button>
         </div>
         <ScrollArea className="max-h-96">
           {notifications.length === 0 ? (
             <p className="p-6 text-center text-sm text-muted-foreground">
-              All quiet — you&apos;re up to date.
+              {tr("notif.empty", "All quiet — you're up to date.")}
             </p>
           ) : (
             <ul className="divide-y">

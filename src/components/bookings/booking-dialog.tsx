@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileCheck2, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { storageKey, storagePathFromUrl } from "@/lib/storage";
 import type { Booking, BookingStatus } from "@/lib/types";
 import {
@@ -40,6 +41,7 @@ const TRIAL_CATEGORIES = new Set([
 const FITTING_CATEGORIES = new Set(["Wedding Clothes / Tailor", "Jeweler"]);
 
 export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: BookingDialogProps) {
+  const { t: tr } = useLang();
   const { db, events, bookings, refresh, logActivity } = useWedding();
   const editing = Boolean(booking);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -91,11 +93,11 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
     if (error) return toast.error(error.message);
     const { data } = db.storage.from("wedding-files").getPublicUrl(path);
     setContractUrl(data.publicUrl);
-    toast.success("Contract attached");
+    toast.success(tr("bookings.toast.contract", "Contract attached"));
   }
 
   async function save() {
-    if (!form.category) return toast.error("Pick a category");
+    if (!form.category) return toast.error(tr("bookings.toast.pickCategory", "Pick a category"));
     setBusy(true);
     const payload = {
       category: form.category,
@@ -126,7 +128,9 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
     refresh("bookings");
     setBusy(false);
     onOpenChange(false);
-    toast.success(editing ? "Booking updated" : "Booking added");
+    toast.success(editing
+      ? tr("bookings.toast.updated", "Booking updated")
+      : tr("bookings.toast.added", "Booking added"));
   }
 
   async function remove() {
@@ -139,7 +143,7 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
     await logActivity("removed", "booking", booking.category);
     refresh("bookings");
     onOpenChange(false);
-    toast.success("Booking removed");
+    toast.success(tr("bookings.toast.removed", "Booking removed"));
   }
 
   return (
@@ -147,7 +151,11 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display font-normal">
-            {editing ? `Edit booking — ${booking?.category}` : "New booking"}
+            {editing
+              ? tr("bookings.dialog.edit", "Edit booking — {category}", {
+                  category: tr("bcat." + (booking?.category ?? ""), booking?.category ?? ""),
+                })
+              : tr("bookings.dialog.new", "New booking")}
           </DialogTitle>
         </DialogHeader>
 
@@ -156,9 +164,9 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
           <div className="rounded-xl border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                Booking status
+                {tr("bookings.dialog.status", "Booking status")}
               </Label>
-              <span className="text-xs font-medium">{BOOKING_STATUS_META[form.status].label}</span>
+              <span className="text-xs font-medium">{tr("bstatus." + form.status, BOOKING_STATUS_META[form.status].label)}</span>
             </div>
             <StatusStepper
               status={form.status}
@@ -174,7 +182,7 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
                     form.status === s ? BOOKING_STATUS_META[s].className : "hover:bg-accent"
                   }`}
                 >
-                  {BOOKING_STATUS_META[s].label}
+                  {tr("bstatus." + s, BOOKING_STATUS_META[s].label)}
                 </button>
               ))}
             </div>
@@ -182,25 +190,25 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{tr("bookings.field.category", "Category")}</Label>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {BOOKING_CATEGORY_NAMES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>{tr("bcat." + c, c)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Ideally booked ~{meta.leadMonths} months before the wedding.
+                {tr("bookings.field.leadHint", "Ideally booked ~{n} months before the wedding.", { n: meta.leadMonths })}
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Wedding function</Label>
+              <Label>{tr("bookings.field.function", "Wedding function")}</Label>
               <Select value={form.event_id} onValueChange={(v) => setForm({ ...form, event_id: v })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">All / general</SelectItem>
+                  <SelectItem value="none">{tr("bookings.field.allGeneral", "All / general")}</SelectItem>
                   {events.filter((e) => !e.archived).map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
@@ -208,34 +216,34 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
               </Select>
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Vendor name</Label>
+              <Label>{tr("bookings.field.vendor", "Vendor name")}</Label>
               <Input
                 value={form.vendor_name}
                 onChange={(e) => setForm({ ...form, vendor_name: e.target.value })}
-                placeholder="e.g. Gulmohar Decor Co."
+                placeholder={tr("bookings.ph.vendor", "e.g. Gulmohar Decor Co.")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Contact person</Label>
+              <Label>{tr("bookings.field.contactPerson", "Contact person")}</Label>
               <Input value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Contact phone</Label>
+              <Label>{tr("bookings.field.contactPhone", "Contact phone")}</Label>
               <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="+91…" />
             </div>
             <div className="space-y-2">
-              <Label>Booking date</Label>
+              <Label>{tr("bookings.field.bookingDate", "Booking date")}</Label>
               <Input type="date" value={form.booking_date} onChange={(e) => setForm({ ...form, booking_date: e.target.value })} />
             </div>
             {showTrial && (
               <div className="space-y-2">
-                <Label>Trial / tasting date</Label>
+                <Label>{tr("bookings.field.trialDate", "Trial / tasting date")}</Label>
                 <Input type="date" value={form.trial_scheduled} onChange={(e) => setForm({ ...form, trial_scheduled: e.target.value })} />
               </div>
             )}
             {showFitting && (
               <div className="space-y-2">
-                <Label>Fitting date</Label>
+                <Label>{tr("bookings.field.fittingDate", "Fitting date")}</Label>
                 <Input type="date" value={form.fitting_date} onChange={(e) => setForm({ ...form, fitting_date: e.target.value })} />
               </div>
             )}
@@ -246,11 +254,11 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
               id="contract-signed" checked={form.contract_signed}
               onCheckedChange={(v) => setForm({ ...form, contract_signed: Boolean(v) })}
             />
-            <Label htmlFor="contract-signed">Contract signed</Label>
+            <Label htmlFor="contract-signed">{tr("bookings.field.contractSigned", "Contract signed")}</Label>
           </div>
 
           <div className="space-y-2">
-            <Label>Contract file</Label>
+            <Label>{tr("bookings.field.contractFile", "Contract file")}</Label>
             <input
               ref={fileRef} type="file" accept="image/*,.pdf" className="hidden"
               onChange={(e) => {
@@ -265,47 +273,51 @@ export function BookingDialog({ open, onOpenChange, booking, defaultCategory }: 
                   href={contractUrl} target="_blank" rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm text-primary hover:bg-accent"
                 >
-                  <FileCheck2 className="size-4" /> View contract
+                  <FileCheck2 className="size-4" /> {tr("bookings.viewContract", "View contract")}
                 </a>
                 <Button variant="ghost" size="sm" onClick={() => setContractUrl(null)}>
-                  <Trash2 className="size-4" /> Remove
+                  <Trash2 className="size-4" /> {tr("action.remove", "Remove")}
                 </Button>
               </div>
             ) : (
               <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                <Upload className="size-4" /> Upload contract
+                <Upload className="size-4" /> {tr("bookings.uploadContract", "Upload contract")}
               </Button>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label>Notes</Label>
+            <Label>{tr("bookings.field.notes", "Notes")}</Label>
             <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
 
           <div className="flex gap-2">
             <Button className="flex-1" onClick={save} disabled={busy}>
               {busy && <Loader2 className="size-4 animate-spin" />}
-              {editing ? "Save booking" : "Add booking"}
+              {editing
+                ? tr("bookings.save", "Save booking")
+                : tr("action.addBooking", "Add booking")}
             </Button>
             {editing && (
               <AlertDialog>
                 <AlertDialogTrigger
-                  render={<Button variant="outline" size="icon" className="text-destructive" aria-label="Delete booking" />}
+                  render={<Button variant="outline" size="icon" className="text-destructive" aria-label={tr("action.delete", "Delete booking")} />}
                 >
                   <Trash2 className="size-4" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this booking?</AlertDialogTitle>
+                    <AlertDialogTitle>{tr("bookings.delete.title", "Delete this booking?")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      The {booking?.category} booking record will be removed permanently.
+                      {tr("bookings.delete.desc", "The {category} booking record will be removed permanently.", {
+                        category: tr("bcat." + (booking?.category ?? ""), booking?.category ?? ""),
+                      })}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{tr("action.cancel", "Cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={remove} className="bg-destructive text-white hover:bg-destructive/90">
-                      Delete
+                      {tr("action.delete", "Delete")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

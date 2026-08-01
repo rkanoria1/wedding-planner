@@ -2,23 +2,25 @@
 
 import { Eye } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const OPTIONS: { id: "rahul" | "somya" | "all"; label: string }[] = [
-  { id: "rahul", label: "Rahul's" },
-  { id: "somya", label: "Somya's" },
-  { id: "all", label: "Both" },
-];
 
 /** Super-admin-only control to view one family's data or both. */
 export function FamilySwitcher() {
+  const { t: tr } = useLang();
   const { isSuperadmin, viewHousehold, setViewHousehold } = useWedding();
   if (!isSuperadmin) return null;
+
+  const OPTIONS: { id: "rahul" | "somya" | "all"; label: string }[] = [
+    { id: "rahul", label: tr("family.rahul", "Rahul's") },
+    { id: "somya", label: tr("family.somya", "Somya's") },
+    { id: "all", label: tr("family.both", "Both") },
+  ];
 
   return (
     <div className="flex items-center gap-2">
       <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
-        <Eye className="size-3.5" /> Viewing
+        <Eye className="size-3.5" /> {tr("family.viewing", "Viewing")}
       </span>
       <div className="flex rounded-full border bg-card p-0.5">
         {OPTIONS.map((o) => (

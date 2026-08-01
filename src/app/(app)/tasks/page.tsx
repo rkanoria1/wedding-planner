@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { TaskPriority, TaskStatus } from "@/lib/types";
 import { PRIORITY_META, STATUS_META, STATUS_ORDER, formatDate, isOpen, taskUrgency } from "@/lib/wedding";
 import { ShareWhatsApp } from "@/components/shared/share-print";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 function TasksPageInner() {
+  const { t: tr } = useLang();
   const router = useRouter();
   const params = useSearchParams();
   const { db, isAdmin, me, tasks, events, profiles, taskAssignees, refresh, logActivity } =
@@ -84,15 +86,16 @@ function TasksPageInner() {
       .filter(isOpen)
       .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))
       .slice(0, 20);
+    const dueWord = tr("task.share.due", "due");
     const lines = open.map(
-      (t) => `• ${t.name}${t.due_date ? ` — due ${formatDate(t.due_date, "d MMM")}` : ""}`
+      (t) => `• ${t.name}${t.due_date ? ` — ${dueWord} ${formatDate(t.due_date, "d MMM")}` : ""}`
     );
     return (
-      `✅ Wedding to-dos\n\n` +
-      (lines.length ? lines.join("\n") : "All caught up! 🎉") +
-      (open.length < tasks.filter(isOpen).length ? `\n…and more in the app.` : "")
+      `${tr("task.share.heading", "✅ Wedding to-dos")}\n\n` +
+      (lines.length ? lines.join("\n") : tr("task.share.empty", "All caught up! 🎉")) +
+      (open.length < tasks.filter(isOpen).length ? `\n${tr("task.share.more", "…and more in the app.")}` : "")
     );
-  }, [tasks]);
+  }, [tasks, tr]);
 
   async function bulkUpdate(field: "status" | "priority", value: TaskStatus | TaskPriority) {
     const { error } = await db.from("tasks").update({ [field]: value }).in("id", selected);
@@ -100,7 +103,7 @@ function TasksPageInner() {
     await logActivity("bulk-updated", "task", `${selected.length} tasks → ${value}`);
     refresh("tasks");
     setSelected([]);
-    toast.success(`${selected.length} tasks updated`);
+    toast.success(tr("task.toast.bulkUpdated", "{n} tasks updated", { n: selected.length }));
   }
 
   async function bulkDelete() {
@@ -109,32 +112,32 @@ function TasksPageInner() {
     await logActivity("bulk-deleted", "task", `${selected.length} tasks`);
     refresh("tasks");
     setSelected([]);
-    toast.success("Tasks deleted");
+    toast.success(tr("task.toast.bulkDeleted", "Tasks deleted"));
   }
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Tasks</h1>
+          <h1 className="font-display text-3xl">{tr("page.tasks", "Tasks")}</h1>
           <p className="text-sm text-muted-foreground">
-            {tasks.filter(isOpen).length} open · {tasks.filter((t) => t.status === "completed").length} done
-            {me && !isAdmin && " — you can edit tasks assigned to you"}
+            {tasks.filter(isOpen).length} {tr("count.open","open")} · {tasks.filter((t) => t.status === "completed").length} {tr("count.done","done")}
+            {me && !isAdmin && tr("task.memberHint", " — you can edit tasks assigned to you")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={view} onValueChange={setView}>
             <TabsList>
-              <TabsTrigger value="kanban" aria-label="Board"><Columns3 className="size-4" /></TabsTrigger>
-              <TabsTrigger value="table" aria-label="Table"><Rows3 className="size-4" /></TabsTrigger>
-              <TabsTrigger value="list" aria-label="List"><LayoutList className="size-4" /></TabsTrigger>
-              <TabsTrigger value="calendar" aria-label="Calendar"><CalendarDays className="size-4" /></TabsTrigger>
+              <TabsTrigger value="kanban" aria-label={tr("misc.board", "Board")}><Columns3 className="size-4" /></TabsTrigger>
+              <TabsTrigger value="table" aria-label={tr("misc.table", "Table")}><Rows3 className="size-4" /></TabsTrigger>
+              <TabsTrigger value="list" aria-label={tr("misc.list", "List")}><LayoutList className="size-4" /></TabsTrigger>
+              <TabsTrigger value="calendar" aria-label={tr("misc.calendar", "Calendar")}><CalendarDays className="size-4" /></TabsTrigger>
             </TabsList>
           </Tabs>
-          <ShareWhatsApp text={todoShareText} label="Share" />
+          <ShareWhatsApp text={todoShareText} label={tr("action.share", "Share")} />
           {isAdmin && (
             <Button onClick={() => setOpenTask("new")}>
-              <Plus className="size-4" /> New task
+              <Plus className="size-4" /> {tr("action.newTask","New task")}
             </Button>
           )}
         </div>
@@ -145,14 +148,14 @@ function TasksPageInner() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search tasks…"
+          placeholder={tr("filter.searchTasks","Search tasks…")}
           className="h-9 w-full sm:w-56"
         />
         <Select value={eventFilter} onValueChange={setEventFilter}>
           <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All events</SelectItem>
-            <SelectItem value="general">General</SelectItem>
+            <SelectItem value="all">{tr("filter.allEvents","All events")}</SelectItem>
+            <SelectItem value="general">{tr("filter.general","General")}</SelectItem>
             {events.filter((e) => !e.archived).map((e) => (
               <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
             ))}
@@ -161,7 +164,7 @@ function TasksPageInner() {
         <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
           <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Anyone</SelectItem>
+            <SelectItem value="all">{tr("filter.anyone","Anyone")}</SelectItem>
             {profiles.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
             ))}
@@ -170,20 +173,20 @@ function TasksPageInner() {
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
           <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Any priority</SelectItem>
+            <SelectItem value="all">{tr("filter.anyPriority","Any priority")}</SelectItem>
             {(Object.keys(PRIORITY_META) as TaskPriority[]).map((p) => (
-              <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+              <SelectItem key={p} value={p}>{tr("priority." + p, PRIORITY_META[p].label)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="open">Open tasks</SelectItem>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
+            <SelectItem value="open">{tr("filter.openTasks","Open tasks")}</SelectItem>
+            <SelectItem value="all">{tr("filter.allStatuses","All statuses")}</SelectItem>
+            <SelectItem value="overdue">{tr("filter.overdue","Overdue")}</SelectItem>
             {STATUS_ORDER.map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+              <SelectItem key={s} value={s}>{tr("status." + s, STATUS_META[s].label)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -192,20 +195,26 @@ function TasksPageInner() {
       {/* bulk bar */}
       {isAdmin && selected.length > 0 && view === "table" && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gold bg-gold-soft/50 px-4 py-2.5">
-          <span className="text-sm font-medium">{selected.length} selected</span>
+          <span className="text-sm font-medium">
+            {tr("task.bulk.selected", "{n} selected", { n: selected.length })}
+          </span>
           <Select onValueChange={(v) => bulkUpdate("status", v as TaskStatus)}>
-            <SelectTrigger className="h-8 w-36"><SelectValue placeholder="Set status…" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36">
+              <SelectValue placeholder={tr("task.bulk.setStatusPh", "Set status…")} />
+            </SelectTrigger>
             <SelectContent>
               {STATUS_ORDER.map((s) => (
-                <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                <SelectItem key={s} value={s}>{tr("status." + s, STATUS_META[s].label)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select onValueChange={(v) => bulkUpdate("priority", v as TaskPriority)}>
-            <SelectTrigger className="h-8 w-36"><SelectValue placeholder="Set priority…" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36">
+              <SelectValue placeholder={tr("task.bulk.setPriorityPh", "Set priority…")} />
+            </SelectTrigger>
             <SelectContent>
               {(Object.keys(PRIORITY_META) as TaskPriority[]).map((p) => (
-                <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+                <SelectItem key={p} value={p}>{tr("priority." + p, PRIORITY_META[p].label)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -213,23 +222,27 @@ function TasksPageInner() {
             <AlertDialogTrigger
               render={<Button variant="outline" size="sm" className="text-destructive" />}
             >
-              <Trash2 className="size-4" /> Delete
+              <Trash2 className="size-4" /> {tr("task.bulk.deleteBtn", "Delete")}
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete {selected.length} tasks?</AlertDialogTitle>
-                <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                <AlertDialogTitle>
+                  {tr("task.bulk.deleteTitle", "Delete {n} tasks?", { n: selected.length })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {tr("task.bulk.deleteDesc", "This cannot be undone.")}
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{tr("action.cancel", "Cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={bulkDelete} className="bg-destructive text-white hover:bg-destructive/90">
-                  Delete
+                  {tr("action.delete", "Delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
           <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
-            <X className="size-4" /> Clear
+            <X className="size-4" /> {tr("task.bulk.clear", "Clear")}
           </Button>
         </div>
       )}

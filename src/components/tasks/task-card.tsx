@@ -2,6 +2,7 @@
 
 import { Users2 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Task } from "@/lib/types";
 import {
   EVENT_THEMES, PRIORITY_META, URGENCY_META, formatDate, taskUrgency,
@@ -11,18 +12,20 @@ import { Badge } from "@/components/ui/badge";
 import { GradientBar } from "@/components/shared/gradient-bar";
 
 export function UrgencyBadge({ task }: { task: Task }) {
+  const { t: tr } = useLang();
   const u = taskUrgency(task);
   if (u === "none") return null;
   const meta = URGENCY_META[u];
   return (
     <Badge variant="outline" className={meta.className}>
       <span className={`mr-1 size-1.5 rounded-full ${meta.dot}`} />
-      {meta.label}
+      {tr("urgency." + u, meta.label)}
     </Badge>
   );
 }
 
 export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) => void }) {
+  const { t: tr } = useLang();
   const { events, profiles, taskAssignees, checklistItems } = useWedding();
   const event = events.find((e) => e.id === task.event_id);
   const assignees = profiles.filter((p) =>
@@ -51,11 +54,11 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
         <div className="flex shrink-0 items-center gap-1">
           {task.shared && (
             <Badge variant="outline" className="gap-1 border-gold/40 bg-gold-soft/60 text-gold-foreground">
-              <Users2 className="size-3" /> Shared
+              <Users2 className="size-3" /> {tr("task.shared.badge", "Shared")}
             </Badge>
           )}
           <Badge variant="outline" className={PRIORITY_META[task.priority].className}>
-            {PRIORITY_META[task.priority].label}
+            {tr("priority." + task.priority, PRIORITY_META[task.priority].label)}
           </Badge>
         </div>
       </div>
@@ -79,7 +82,7 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (id: string) =>
             />
           )}
           <span className="truncate text-[11px] text-muted-foreground">
-            {event?.name ?? "General"} · {formatDate(task.due_date, "d MMM")}
+            {event?.name ?? tr("misc.general", "General")} · {formatDate(task.due_date, "d MMM")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">

@@ -28,10 +28,13 @@ function useCountdown(target: string) {
 
 function greetingKey() {
   const h = new Date().getHours();
-  return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+  if (h < 5) return "lateNight";
+  if (h < 12) return "morning";
+  if (h < 17) return "afternoon";
+  return "evening";
 }
 
-function greeting() {
+function greetingFallback() {
   const h = new Date().getHours();
   if (h < 5) return "Burning the midnight oil";
   if (h < 12) return "Good morning";
@@ -41,17 +44,17 @@ function greeting() {
 
 export function CountdownHero() {
   const { settings, tasks, branding } = useWedding();
-  const { t } = useLang();
+  const { t: tr } = useLang();
   const cd = useCountdown(settings.wedding_date + "T00:00:00");
   const progress = taskListProgress(tasks);
   const elapsed = planningElapsed(settings.planning_start, settings.wedding_date);
-  const firstName = branding.greetingName || "there";
+  const firstName = branding.greetingName || tr("greet.there", "there");
 
   const units = [
-    { v: cd.days, l: "days" },
-    { v: cd.hours, l: "hrs" },
-    { v: cd.minutes, l: "min" },
-    { v: cd.seconds, l: "sec" },
+    { v: cd.days, l: tr("countdown.days", "days") },
+    { v: cd.hours, l: tr("countdown.hrs", "hrs") },
+    { v: cd.minutes, l: tr("countdown.min", "min") },
+    { v: cd.seconds, l: tr("countdown.sec", "sec") },
   ];
 
   return (
@@ -71,15 +74,17 @@ export function CountdownHero() {
       <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">
-            {t("greet." + greetingKey(), greeting())}, <span className="font-medium text-foreground">{firstName}</span> ✨
+            {tr("greet." + greetingKey(), greetingFallback())}, <span className="font-medium text-foreground">{firstName}</span> ✨
           </p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
             <span className="text-gradient-gold">{branding.coupleNames}</span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {formatDate(settings.wedding_date, "EEEE, d MMMM yyyy")} ·{" "}
-            {daysRemaining(settings.wedding_date)} days ({weeksRemaining(settings.wedding_date)}{" "}
-            weeks) remaining
+            {tr("countdown.remainingLine", "{days} days ({weeks} weeks) remaining", {
+              days: daysRemaining(settings.wedding_date),
+              weeks: weeksRemaining(settings.wedding_date),
+            })}
           </p>
 
           {/* live countdown */}
@@ -101,7 +106,7 @@ export function CountdownHero() {
 
           <div className="mt-5 max-w-md">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Planning time elapsed</span>
+              <span>{tr("countdown.timeElapsed", "Planning time elapsed")}</span>
               <span>{elapsed}%</span>
             </div>
             <GradientBar value={elapsed} className="mt-1.5" />
@@ -117,7 +122,7 @@ export function CountdownHero() {
               <>
                 <span className="font-display text-3xl">{progress}%</span>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  planned
+                  {tr("countdown.planned", "planned")}
                 </span>
               </>
             }

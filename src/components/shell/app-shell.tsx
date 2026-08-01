@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Gem, Loader2 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { Sidebar } from "./sidebar";
 import { MobileTabBar } from "./mobile-tabbar";
 import { FamilySwitcher } from "./family-switcher";
@@ -15,6 +16,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { loading } = useWedding();
+  const { t: tr } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -28,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* topbar */}
         <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
           {/* compact brand on mobile (desktop has the sidebar logo) */}
-          <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Home">
+          <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label={tr("shell.home", "Home")}>
             <span className="flex size-9 items-center justify-center rounded-xl bg-gold-soft text-gold-foreground">
               <Gem className="size-5" />
             </span>
@@ -46,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* full-nav drawer, opened from the bottom bar's "More" */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent side="left" className="w-72 border-0 p-0">
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SheetTitle className="sr-only">{tr("shell.nav", "Navigation")}</SheetTitle>
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </SheetContent>
         </Sheet>
@@ -55,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {loading ? (
             <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-muted-foreground">
               <Loader2 className="size-8 animate-spin text-gold" />
-              <p className="font-display text-lg">Setting the stage…</p>
+              <p className="font-display text-lg">{tr("shell.loading", "Setting the stage…")}</p>
             </div>
           ) : (
             children

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Camera, HeartHandshake, ScrollText } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { EVENT_THEMES, daysRemaining, formatDate } from "@/lib/wedding";
 import { getGuestDisplayName } from "@/lib/guest";
 import { useInviteContext } from "@/lib/use-invite";
@@ -11,28 +12,36 @@ import { useInviteContext } from "@/lib/use-invite";
 const CARDS = [
   {
     href: "/timeline",
+    titleKey: "guest.card.timeline",
     title: "Ceremony Timeline",
+    hintKey: "guest.card.timeline.hint",
     hint: "The run of each celebration",
     icon: ScrollText,
     tone: "from-[#1a1210] to-[#7b1e3b]",
   },
   {
     href: "/lookbook",
+    titleKey: "guest.card.lookbook",
     title: "Lookbook",
+    hintKey: "guest.card.lookbook.hint",
     hint: "Outfits, jewelry & color stories",
     icon: BookOpen,
     tone: "from-[#8b5a4a] to-[#c4a484]",
   },
   {
     href: "/blessings",
+    titleKey: "guest.card.blessings",
     title: "Blessings",
+    hintKey: "guest.card.blessings.hint",
     hint: "Leave a note for the couple",
     icon: HeartHandshake,
     tone: "from-[#5c3d2e] to-[#a67c52]",
   },
   {
     href: "/moments",
+    titleKey: "guest.card.moments",
     title: "Moments",
+    hintKey: "guest.card.moments.hint",
     hint: "Share photos from the festivities",
     icon: Camera,
     tone: "from-[#2f4f4f] to-[#6b8f71]",
@@ -40,6 +49,7 @@ const CARDS = [
 ];
 
 export default function GuestHomePage() {
+  const { t: tr } = useLang();
   const { settings, events } = useWedding();
   const invite = useInviteContext();
   const days = daysRemaining(settings.wedding_date);
@@ -64,7 +74,9 @@ export default function GuestHomePage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1210] via-[#3d2a24] to-[#7b1e3b] p-7 text-white"
       >
         <p className="text-xs uppercase tracking-[0.25em] text-white/60">
-          {invite?.heading ?? (name ? `Welcome, ${name}` : "Welcome")}
+          {invite?.heading ?? (name
+            ? tr("guest.welcomeNamed", "Welcome, {name}", { name })
+            : tr("guest.welcome", "Welcome"))}
         </p>
         {invite?.message && (
           <p className="mt-1 text-sm text-amber-200/90">{invite.message}</p>
@@ -76,10 +88,12 @@ export default function GuestHomePage() {
           {formatDate(settings.wedding_date, "EEEE, d MMMM yyyy")}
         </p>
         <p className="mt-6 font-display text-5xl text-amber-200">{days}</p>
-        <p className="text-sm text-white/70">days to the wedding</p>
+        <p className="text-sm text-white/70">
+          {tr("guest.daysToWedding", "days to the wedding")}
+        </p>
         {nextEvent && (
           <p className="mt-5 rounded-2xl bg-white/10 px-4 py-3 text-sm backdrop-blur-sm">
-            Up next: <span className="font-medium">{nextEvent.name}</span>
+            {tr("guest.upNext", "Up next")}: <span className="font-medium">{nextEvent.name}</span>
             {nextEvent.event_date && (
               <> · {formatDate(nextEvent.event_date, "d MMM")}</>
             )}
@@ -98,7 +112,7 @@ export default function GuestHomePage() {
           className="rounded-2xl border bg-card p-5"
         >
           <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            Your schedule
+            {tr("guest.schedule", "Your schedule")}
           </p>
           <ol className="mt-4 space-y-0">
             {schedule.map((e, i) => {
@@ -125,7 +139,7 @@ export default function GuestHomePage() {
                       <p className="font-display text-lg leading-none">{e.name}</p>
                       {isToday && (
                         <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-                          Today
+                          {tr("guest.today", "Today")}
                         </span>
                       )}
                     </div>
@@ -159,8 +173,8 @@ export default function GuestHomePage() {
               className={`flex min-h-[120px] flex-col justify-end rounded-2xl bg-gradient-to-br ${c.tone} p-5 text-white shadow-lg transition-transform hover:-translate-y-0.5`}
             >
               <c.icon className="mb-3 size-6 opacity-80" />
-              <p className="font-display text-xl">{c.title}</p>
-              <p className="text-sm text-white/75">{c.hint}</p>
+              <p className="font-display text-xl">{tr(c.titleKey, c.title)}</p>
+              <p className="text-sm text-white/75">{tr(c.hintKey, c.hint)}</p>
             </Link>
           </motion.div>
         ))}

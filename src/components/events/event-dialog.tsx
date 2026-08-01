@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { EventTheme, WeddingEvent } from "@/lib/types";
 import { EVENT_THEMES } from "@/lib/wedding";
 import { sweepEventStorage } from "@/lib/storage";
@@ -34,6 +35,7 @@ export function EventDialog({
   event?: WeddingEvent | null;
 }) {
   const router = useRouter();
+  const { t: tr } = useLang();
   const { db, events, refresh, logActivity } = useWedding();
   const editing = Boolean(event);
 
@@ -62,7 +64,7 @@ export function EventDialog({
   }, [event, open]);
 
   async function save() {
-    if (!form.name.trim()) return toast.error("Name the celebration");
+    if (!form.name.trim()) return toast.error(tr("event.toast.needName", "Name the celebration"));
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
@@ -76,7 +78,7 @@ export function EventDialog({
       const { error } = await db.from("events").update(payload).eq("id", event.id);
       if (error) return toast.error(error.message);
       await logActivity(form.archived && !event.archived ? "archived" : "updated", "event", payload.name, event.id);
-      toast.success("Event updated");
+      toast.success(tr("event.toast.updated", "Event updated"));
     } else {
       const { data, error } = await db
         .from("events")
@@ -85,7 +87,7 @@ export function EventDialog({
         .single();
       if (error) return toast.error(error.message);
       await logActivity("created", "event", payload.name, data.id);
-      toast.success(`${payload.name} added — plan away!`);
+      toast.success(tr("event.toast.added", "{name} added — plan away!", { name: payload.name }));
       onOpenChange(false);
       refresh("events");
       router.push(`/events/${data.id}`);
@@ -105,7 +107,7 @@ export function EventDialog({
     refresh("events");
     onOpenChange(false);
     router.push("/");
-    toast.success("Event removed");
+    toast.success(tr("event.toast.removed", "Event removed"));
   }
 
   return (
@@ -113,35 +115,37 @@ export function EventDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display font-normal">
-            {editing ? `Edit ${event?.name}` : "New celebration"}
+            {editing
+              ? tr("event.dialog.edit", "Edit {name}", { name: event?.name ?? "" })
+              : tr("event.dialog.new", "New celebration")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label>Event name</Label>
+              <Label>{tr("event.field.name", "Event name")}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Sangeet, Engagement…"
+                placeholder={tr("event.ph.name", "e.g. Sangeet, Engagement…")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{tr("event.field.date", "Date")}</Label>
               <Input
                 type="date" value={form.event_date}
                 onChange={(e) => setForm({ ...form, event_date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Venue</Label>
+              <Label>{tr("event.field.venue", "Venue")}</Label>
               <Input
                 value={form.venue}
                 onChange={(e) => setForm({ ...form, venue: e.target.value })}
               />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Description</Label>
+              <Label>{tr("event.field.description", "Description")}</Label>
               <Textarea
                 rows={2} value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -150,28 +154,28 @@ export function EventDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Festive theme</Label>
+            <Label>{tr("event.field.theme", "Festive theme")}</Label>
             <div className="grid grid-cols-4 gap-2">
-              {(Object.keys(EVENT_THEMES) as EventTheme[]).map((t) => (
+              {(Object.keys(EVENT_THEMES) as EventTheme[]).map((themeKey) => (
                 <button
-                  key={t}
+                  key={themeKey}
                   type="button"
-                  onClick={() => setForm({ ...form, theme: t })}
+                  onClick={() => setForm({ ...form, theme: themeKey })}
                   className={cn(
                     "h-12 rounded-xl transition-all",
-                    EVENT_THEMES[t].gradient,
-                    form.theme === t
+                    EVENT_THEMES[themeKey].gradient,
+                    form.theme === themeKey
                       ? "ring-2 ring-gold ring-offset-2 ring-offset-background"
                       : "opacity-80 hover:opacity-100"
                   )}
-                  title={EVENT_THEMES[t].label}
+                  title={tr("event.theme." + themeKey, EVENT_THEMES[themeKey].label)}
                 />
               ))}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Icon</Label>
+            <Label>{tr("event.field.icon", "Icon")}</Label>
             <div className="flex flex-wrap gap-2">
               {Object.keys(EVENT_ICONS).map((name) => (
                 <button
@@ -194,9 +198,11 @@ export function EventDialog({
           {editing && (
             <div className="flex items-center justify-between rounded-xl border px-4 py-3">
               <div>
-                <p className="text-sm font-medium">Archive event</p>
+                <p className="text-sm font-medium">
+                  {tr("event.archive.title", "Archive event")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Hidden from navigation, data preserved.
+                  {tr("event.archive.hint", "Hidden from navigation, data preserved.")}
                 </p>
               </div>
               <Switch
@@ -208,27 +214,40 @@ export function EventDialog({
 
           <div className="flex gap-2">
             <Button className="flex-1" onClick={save}>
-              {editing ? "Save changes" : "Create event"}
+              {editing
+                ? tr("event.save", "Save changes")
+                : tr("event.create", "Create event")}
             </Button>
             {editing && (
               <AlertDialog>
                 <AlertDialogTrigger
-                  render={<Button variant="outline" size="icon" className="text-destructive" aria-label="Delete event" />}
+                  render={
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-destructive"
+                      aria-label={tr("action.delete", "Delete")}
+                    />
+                  }
                 >
                   <Trash2 className="size-4" />
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {event?.name}?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {tr("event.delete.title", "Delete {name}?", { name: event?.name ?? "" })}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      All its tasks, shopping items and notes will be deleted too.
-                      Consider archiving instead.
+                      {tr(
+                        "event.delete.desc",
+                        "All its tasks, shopping items and notes will be deleted too. Consider archiving instead."
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{tr("action.cancel", "Cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={remove} className="bg-destructive text-white hover:bg-destructive/90">
-                      Delete permanently
+                      {tr("event.delete.confirm", "Delete permanently")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

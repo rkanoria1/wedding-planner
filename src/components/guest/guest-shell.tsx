@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
 import { getGuestDisplayName, setGuestDisplayName } from "@/lib/guest";
+import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -16,16 +17,17 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/welcome", label: "Home", icon: Home },
-  { href: "/timeline", label: "Timeline", icon: ScrollText },
-  { href: "/lookbook", label: "Lookbook", icon: BookOpen },
-  { href: "/blessings", label: "Blessings", icon: HeartHandshake },
-  { href: "/moments", label: "Moments", icon: Camera },
+  { href: "/welcome", label: "Home", k: "nav.home", icon: Home },
+  { href: "/timeline", label: "Timeline", k: "guest.timeline", icon: ScrollText },
+  { href: "/lookbook", label: "Lookbook", k: "guest.lookbook", icon: BookOpen },
+  { href: "/blessings", label: "Blessings", k: "guest.blessings", icon: HeartHandshake },
+  { href: "/moments", label: "Moments", k: "guest.moments", icon: Camera },
 ];
 
 export function GuestShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t: tr } = useLang();
   const { db, loading, settings } = useWedding();
   const [nameOpen, setNameOpen] = useState(false);
   const [name, setName] = useState("");
@@ -56,11 +58,18 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
           </span>
           <div className="leading-tight">
             <p className="font-display text-lg">{settings.couple_names}</p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Guest</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              {tr("guest.badge", "Guest")}
+            </p>
           </div>
         </Link>
         <div className="flex-1" />
-        <Button variant="ghost" size="icon" aria-label="Sign out" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={tr("action.signOut", "Sign out")}
+          onClick={signOut}
+        >
           <LogOut className="size-4" />
         </Button>
       </header>
@@ -69,7 +78,9 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         {loading ? (
           <div className="flex h-[50vh] flex-col items-center justify-center gap-3 text-muted-foreground">
             <Loader2 className="size-8 animate-spin text-gold" />
-            <p className="font-display text-lg">Opening the celebration…</p>
+            <p className="font-display text-lg">
+              {tr("guest.loading", "Opening the celebration…")}
+            </p>
           </div>
         ) : (
           children
@@ -81,7 +92,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto grid max-w-lg grid-cols-5">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, label, k, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
@@ -100,7 +111,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
                 >
                   <Icon className="size-[20px]" />
                 </span>
-                {label}
+                {tr(k, label)}
               </Link>
             );
           })}
@@ -111,22 +122,22 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         <DialogContent showCloseButton={false} className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-normal text-2xl">
-              What should we call you?
+              {tr("guest.name.title", "What should we call you?")}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Your name appears on blessings and photos you share.
+            {tr("guest.name.hint", "Your name appears on blessings and photos you share.")}
           </p>
           <Input
             autoFocus
-            placeholder="e.g. Your Name"
+            placeholder={tr("guest.name.ph", "e.g. Your Name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && saveName()}
             className="h-12"
           />
           <Button className="h-11 w-full" disabled={!name.trim()} onClick={saveName}>
-            Continue
+            {tr("guest.name.continue", "Continue")}
           </Button>
         </DialogContent>
       </Dialog>

@@ -8,6 +8,7 @@ import {
   Plus, ShoppingBag, StickyNote, Store, TriangleAlert, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Booking, Task } from "@/lib/types";
 import {
   bookingStats, bookingUrgency, categoryMeta, isSecured,
@@ -54,6 +55,7 @@ function WidgetCard({
 }
 
 function TaskRow({ task }: { task: Task }) {
+  const { t: tr } = useLang();
   const urgency = taskUrgency(task);
   const meta = URGENCY_META[urgency];
   return (
@@ -64,7 +66,7 @@ function TaskRow({ task }: { task: Task }) {
       <span className={`size-2 shrink-0 rounded-full ${meta.dot}`} />
       <span className="min-w-0 flex-1 truncate text-sm">{task.name}</span>
       <Badge variant="outline" className={PRIORITY_META[task.priority].className}>
-        {PRIORITY_META[task.priority].label}
+        {tr("priority." + task.priority, PRIORITY_META[task.priority].label)}
       </Badge>
       <span className="hidden w-20 text-right text-xs text-muted-foreground sm:block">
         {formatDate(task.due_date, "d MMM")}
@@ -76,6 +78,7 @@ function TaskRow({ task }: { task: Task }) {
 /* —— urgent + today + upcoming —— */
 
 export function UrgentTasksWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { tasks } = useWedding();
   const urgent = tasks
     .filter((t) => isOpen(t) && ["overdue", "critical", "urgent"].includes(taskUrgency(t)))
@@ -84,18 +87,18 @@ export function UrgentTasksWidget({ delay = 0 }: { delay?: number }) {
 
   return (
     <WidgetCard
-      title="Needs attention"
+      title={tr("dash.urgent.title", "Needs attention")}
       icon={<Flame className="size-5 text-destructive" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/tasks" />}>
-          All tasks <ArrowRight className="size-3.5" />
+          {tr("dash.urgent.allTasks", "All tasks")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       {urgent.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">
-          Nothing urgent — the calm before the celebration. 🌿
+          {tr("dash.urgent.empty", "Nothing urgent — the calm before the celebration. 🌿")}
         </p>
       ) : (
         <div className="-mx-2 space-y-0.5">
@@ -107,6 +110,7 @@ export function UrgentTasksWidget({ delay = 0 }: { delay?: number }) {
 }
 
 export function TodayWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { tasks } = useWedding();
   const today = tasks.filter(
     (t) => isOpen(t) && t.due_date && isToday(parseISO(t.due_date))
@@ -118,13 +122,13 @@ export function TodayWidget({ delay = 0 }: { delay?: number }) {
 
   return (
     <WidgetCard
-      title="Today & up next"
+      title={tr("dash.today.title", "Today & up next")}
       icon={<CalendarClock className="size-5 text-gold" />}
       delay={delay}
     >
       {today.length === 0 && upcoming.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">
-          No deadlines on the horizon.
+          {tr("dash.today.empty", "No deadlines on the horizon.")}
         </p>
       ) : (
         <div className="-mx-2 space-y-0.5">
@@ -139,18 +143,19 @@ export function TodayWidget({ delay = 0 }: { delay?: number }) {
 /* —— shopping, booking —— */
 
 export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { shoppingItems } = useWedding();
   const pct = shoppingProgress(shoppingItems);
   const bought = shoppingItems.filter((i) => i.purchased);
 
   return (
     <WidgetCard
-      title="Shopping"
+      title={tr("dash.shopping.title", "Shopping")}
       icon={<ShoppingBag className="size-5 text-chart-3" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/shopping" />}>
-          List <ArrowRight className="size-3.5" />
+          {tr("dash.shopping.list", "List")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
@@ -159,11 +164,15 @@ export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
           <span className="font-display text-2xl">
             {bought.length}/{shoppingItems.length}
           </span>
-          <span className="text-xs text-muted-foreground">items bought</span>
+          <span className="text-xs text-muted-foreground">
+            {tr("dash.shopping.itemsBought", "items bought")}
+          </span>
         </div>
         <GradientBar value={pct} />
         <p className="text-sm text-muted-foreground">
-          {shoppingItems.length - bought.length} still on the checklist
+          {tr("dash.shopping.still", "{n} still on the checklist", {
+            n: shoppingItems.length - bought.length,
+          })}
         </p>
       </div>
     </WidgetCard>
@@ -171,18 +180,19 @@ export function ShoppingWidget({ delay = 0 }: { delay?: number }) {
 }
 
 export function BookingWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { vendors } = useWedding();
   const pct = bookingProgress(vendors);
   const booked = vendors.filter((v) => v.booked).length;
 
   return (
     <WidgetCard
-      title="Vendors"
+      title={tr("dash.vendors.title", "Vendors")}
       icon={<Store className="size-5 text-chart-4" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/vendors" />}>
-          All <ArrowRight className="size-3.5" />
+          {tr("dash.vendors.all", "All")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
@@ -191,11 +201,15 @@ export function BookingWidget({ delay = 0 }: { delay?: number }) {
           <span className="font-display text-2xl">
             {booked}/{vendors.length}
           </span>
-          <span className="text-xs text-muted-foreground">vendors booked</span>
+          <span className="text-xs text-muted-foreground">
+            {tr("dash.vendors.booked", "vendors booked")}
+          </span>
         </div>
         <GradientBar value={pct} />
         <p className="text-sm text-muted-foreground">
-          {vendors.length - booked} still exploring
+          {tr("dash.vendors.exploring", "{n} still exploring", {
+            n: vendors.length - booked,
+          })}
         </p>
       </div>
     </WidgetCard>
@@ -203,6 +217,7 @@ export function BookingWidget({ delay = 0 }: { delay?: number }) {
 }
 
 export function GuestsWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { guests } = useWedding();
   const confirmed = guests.filter((g) => g.rsvp === "confirmed");
   const heads = confirmed.reduce((s, g) => s + g.head_count, 0);
@@ -210,23 +225,27 @@ export function GuestsWidget({ delay = 0 }: { delay?: number }) {
 
   return (
     <WidgetCard
-      title="Guests"
+      title={tr("dash.guests.title", "Guests")}
       icon={<Users className="size-5 text-chart-5" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/guests" />}>
-          Manage <ArrowRight className="size-3.5" />
+          {tr("dash.guests.manage", "Manage")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-2xl">{heads}</span>
-          <span className="text-xs text-muted-foreground">confirmed heads</span>
+          <span className="text-xs text-muted-foreground">
+            {tr("dash.guests.confirmedHeads", "confirmed heads")}
+          </span>
         </div>
         <GradientBar value={guests.length ? Math.round((confirmed.length / guests.length) * 100) : 0} />
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Invitations sent</span>
+          <span className="text-muted-foreground">
+            {tr("dash.guests.invitesSent", "Invitations sent")}
+          </span>
           <span className="font-medium">{invited}/{guests.length}</span>
         </div>
       </div>
@@ -237,6 +256,7 @@ export function GuestsWidget({ delay = 0 }: { delay?: number }) {
 /* —— events strip —— */
 
 export function EventStatusStrip({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { events, tasks } = useWedding();
   const active = events.filter((e) => !e.archived);
 
@@ -268,7 +288,10 @@ export function EventStatusStrip({ delay = 0 }: { delay?: number }) {
               <div className="p-4">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>
-                    {evTasks.filter((t) => t.status === "completed").length}/{evTasks.length} tasks
+                    {tr("dash.event.tasks", "{done}/{total} tasks", {
+                      done: evTasks.filter((t) => t.status === "completed").length,
+                      total: evTasks.length,
+                    })}
                   </span>
                   <span className="font-medium text-foreground">{pct}%</span>
                 </div>
@@ -285,23 +308,26 @@ export function EventStatusStrip({ delay = 0 }: { delay?: number }) {
 /* —— activity + notes + quick actions —— */
 
 export function ActivityWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { activity, profiles } = useWedding();
   const name = (id: string | null) =>
-    profiles.find((p) => p.id === id)?.full_name ?? "Someone";
+    profiles.find((p) => p.id === id)?.full_name ?? tr("misc.someone", "Someone");
 
   return (
     <WidgetCard
-      title="Recent activity"
+      title={tr("dash.activity.title", "Recent activity")}
       icon={<History className="size-5 text-muted-foreground" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/activity" />}>
-          Full log <ArrowRight className="size-3.5" />
+          {tr("dash.activity.fullLog", "Full log")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       {activity.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">No activity yet.</p>
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          {tr("dash.activity.empty", "No activity yet.")}
+        </p>
       ) : (
         <ul className="space-y-3">
           {activity.slice(0, 6).map((a) => (
@@ -310,7 +336,9 @@ export function ActivityWidget({ delay = 0 }: { delay?: number }) {
               <div className="min-w-0">
                 <p className="truncate">
                   <span className="font-medium">{name(a.actor_id)}</span>{" "}
-                  <span className="text-muted-foreground">{a.action}</span>{" "}
+                  <span className="text-muted-foreground">
+                    {tr("activity.action." + a.action, a.action)}
+                  </span>{" "}
                   {a.detail}
                 </p>
                 <p className="text-[11px] text-muted-foreground/70">
@@ -326,24 +354,27 @@ export function ActivityWidget({ delay = 0 }: { delay?: number }) {
 }
 
 export function QuickNotesWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { notes, profiles } = useWedding();
   const pinnedFirst = [...notes].sort((a, b) => Number(b.pinned) - Number(a.pinned)).slice(0, 4);
   const name = (id: string | null) =>
-    profiles.find((p) => p.id === id)?.full_name.split(" ")[0] ?? "Someone";
+    profiles.find((p) => p.id === id)?.full_name.split(" ")[0] ?? tr("misc.someone", "Someone");
 
   return (
     <WidgetCard
-      title="Quick notes"
+      title={tr("dash.notes.title", "Quick notes")}
       icon={<StickyNote className="size-5 text-gold" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/settings?tab=notes" />}>
-          All notes <ArrowRight className="size-3.5" />
+          {tr("dash.notes.all", "All notes")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       {pinnedFirst.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">No notes yet.</p>
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          {tr("dash.notes.empty", "No notes yet.")}
+        </p>
       ) : (
         <ul className="space-y-2.5">
           {pinnedFirst.map((n) => (
@@ -361,12 +392,13 @@ export function QuickNotesWidget({ delay = 0 }: { delay?: number }) {
 }
 
 export function QuickActions({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const actions = [
-    { href: "/tasks?new=1", label: "New task", icon: Plus },
-    { href: "/bookings?new=1", label: "Add booking", icon: CalendarCheck2 },
-    { href: "/shopping?new=1", label: "Shopping item", icon: ShoppingBag },
-    { href: "/guests?new=1", label: "Add guest", icon: Users },
-    { href: "/vendors?new=1", label: "Add vendor", icon: Store },
+    { href: "/tasks?new=1", label: tr("action.newTask", "New task"), icon: Plus },
+    { href: "/bookings?new=1", label: tr("action.addBooking", "Add booking"), icon: CalendarCheck2 },
+    { href: "/shopping?new=1", label: tr("action.shoppingItem", "Shopping item"), icon: ShoppingBag },
+    { href: "/guests?new=1", label: tr("action.addGuest", "Add guest"), icon: Users },
+    { href: "/vendors?new=1", label: tr("action.addVendor", "Add vendor"), icon: Store },
   ];
   return (
     <motion.div
@@ -389,6 +421,7 @@ export function QuickActions({ delay = 0 }: { delay?: number }) {
 /* —— overdue bookings red-flag banner —— */
 
 export function OverdueBookingsBanner({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { bookings, settings } = useWedding();
   const overdue = bookings
     .filter(
@@ -411,10 +444,12 @@ export function OverdueBookingsBanner({ delay = 0 }: { delay?: number }) {
       <div className="flex items-center justify-between gap-2 border-b border-red-500/20 bg-red-500/10 px-4 py-2.5">
         <p className="flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
           <TriangleAlert className="size-4" />
-          {overdue.length} booking{overdue.length > 1 ? "s" : ""} overdue — past the ideal book-by date
+          {tr("dash.overdue.banner", "{n} bookings overdue — past the ideal book-by date", {
+            n: overdue.length,
+          })}
         </p>
         <Button variant="ghost" size="sm" render={<Link href="/bookings" />}>
-          Fix now <ArrowRight className="size-3.5" />
+          {tr("action.fixNow", "Fix now")} <ArrowRight className="size-3.5" />
         </Button>
       </div>
       <div className="flex flex-wrap gap-2 p-3">
@@ -436,28 +471,33 @@ export function OverdueBookingsBanner({ delay = 0 }: { delay?: number }) {
 /* —— booking status compact widget —— */
 
 export function BookingStatusWidget({ delay = 0 }: { delay?: number }) {
+  const { t: tr } = useLang();
   const { bookings, settings } = useWedding();
   const stats = bookingStats(bookings, settings.wedding_date);
 
   return (
     <WidgetCard
-      title="Bookings"
+      title={tr("dash.bookings.title", "Bookings")}
       icon={<CalendarCheck2 className="size-5 text-chart-3" />}
       delay={delay}
       action={
         <Button variant="ghost" size="sm" render={<Link href="/bookings" />}>
-          Tracker <ArrowRight className="size-3.5" />
+          {tr("dash.bookings.tracker", "Tracker")} <ArrowRight className="size-3.5" />
         </Button>
       }
     >
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-2xl">{stats.secured}/{stats.total}</span>
-          <span className="text-xs text-muted-foreground">vendors secured</span>
+          <span className="text-xs text-muted-foreground">
+            {tr("dash.bookings.secured", "vendors secured")}
+          </span>
         </div>
         <GradientBar value={stats.progress} />
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Overdue to book</span>
+          <span className="text-muted-foreground">
+            {tr("dash.bookings.overdue", "Overdue to book")}
+          </span>
           <span className={`font-medium ${stats.overdue > 0 ? "text-red-600 dark:text-red-400" : ""}`}>
             {stats.overdue}
           </span>

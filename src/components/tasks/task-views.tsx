@@ -5,8 +5,10 @@ import {
   addDays, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
   parseISO, startOfMonth, startOfWeek,
 } from "date-fns";
+import { hi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import type { Task } from "@/lib/types";
 import {
   EVENT_THEMES, PRIORITY_META, STATUS_META, formatDate,
@@ -36,10 +38,17 @@ export function TaskTable({
   selected: string[];
   setSelected: (ids: string[]) => void;
 }) {
+  const { t: tr } = useLang();
   const { events, profiles, taskAssignees, isAdmin } = useWedding();
 
   if (tasks.length === 0) {
-    return <EmptyState icon={ListChecks} title="No tasks match" hint="Try changing the filters." />;
+    return (
+      <EmptyState
+        icon={ListChecks}
+        title={tr("task.empty.title", "No tasks match")}
+        hint={tr("task.empty.hint", "Try changing the filters.")}
+      />
+    );
   }
 
   const allSelected = tasks.length > 0 && tasks.every((t) => selected.includes(t.id));
@@ -59,15 +68,15 @@ export function TaskTable({
                 />
               </TableHead>
             )}
-            <TableHead>Task</TableHead>
-            <TableHead>Event</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Urgency</TableHead>
-            <TableHead>Due</TableHead>
-            <TableHead>Assigned</TableHead>
-            <TableHead className="w-28">Progress</TableHead>
+            <TableHead>{tr("task.col.task", "Task")}</TableHead>
+            <TableHead>{tr("task.col.event", "Event")}</TableHead>
+            <TableHead>{tr("task.col.category", "Category")}</TableHead>
+            <TableHead>{tr("task.col.priority", "Priority")}</TableHead>
+            <TableHead>{tr("task.col.status", "Status")}</TableHead>
+            <TableHead>{tr("task.col.urgency", "Urgency")}</TableHead>
+            <TableHead>{tr("task.col.due", "Due")}</TableHead>
+            <TableHead>{tr("task.col.assigned", "Assigned")}</TableHead>
+            <TableHead className="w-28">{tr("task.col.progress", "Progress")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -109,18 +118,20 @@ export function TaskTable({
                       {event.name}
                     </span>
                   ) : (
-                    <span className="text-sm text-muted-foreground">General</span>
+                    <span className="text-sm text-muted-foreground">{tr("misc.general", "General")}</span>
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{task.category}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {tr("tcat." + task.category, task.category)}
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={PRIORITY_META[task.priority].className}>
-                    {PRIORITY_META[task.priority].label}
+                    {tr("priority." + task.priority, PRIORITY_META[task.priority].label)}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={STATUS_META[task.status].className}>
-                    {STATUS_META[task.status].label}
+                    {tr("status." + task.status, STATUS_META[task.status].label)}
                   </Badge>
                 </TableCell>
                 <TableCell><UrgencyBadge task={task} /></TableCell>
@@ -156,6 +167,7 @@ export function TaskList({
   tasks: Task[];
   onOpen: (id: string) => void;
 }) {
+  const { t: tr } = useLang();
   const { events } = useWedding();
   const groups = useMemo(() => {
     const map = new Map<string, Task[]>();
@@ -167,7 +179,13 @@ export function TaskList({
   }, [tasks]);
 
   if (tasks.length === 0) {
-    return <EmptyState icon={ListChecks} title="No tasks match" hint="Try changing the filters." />;
+    return (
+      <EmptyState
+        icon={ListChecks}
+        title={tr("task.empty.title", "No tasks match")}
+        hint={tr("task.empty.hint", "Try changing the filters.")}
+      />
+    );
   }
 
   return (
@@ -183,7 +201,7 @@ export function TaskList({
                   style={{ background: EVENT_THEMES[event.theme]?.chip }}
                 />
               )}
-              {event?.name ?? "General"}
+              {event?.name ?? tr("misc.general", "General")}
               <span className="text-sm text-muted-foreground">({group.length})</span>
             </h3>
             <div className="card-lux divide-y">
@@ -209,7 +227,7 @@ export function TaskList({
                   </span>
                   <UrgencyBadge task={task} />
                   <Badge variant="outline" className={STATUS_META[task.status].className}>
-                    {STATUS_META[task.status].label}
+                    {tr("status." + task.status, STATUS_META[task.status].label)}
                   </Badge>
                   <span className="hidden w-20 text-right text-xs tabular-nums text-muted-foreground sm:block">
                     {formatDate(task.due_date, "d MMM")}
@@ -233,8 +251,10 @@ export function TaskCalendar({
   tasks: Task[];
   onOpen: (id: string) => void;
 }) {
+  const { t: tr, lang } = useLang();
   const { events } = useWedding();
   const [month, setMonth] = useState(() => new Date());
+  const locale = lang === "hi" ? hi : undefined;
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
@@ -245,25 +265,44 @@ export function TaskCalendar({
   }, [month]);
 
   const eventDays = events.filter((e) => e.event_date && !e.archived);
+  const weekdays = [
+    tr("task.cal.mon", "Mon"),
+    tr("task.cal.tue", "Tue"),
+    tr("task.cal.wed", "Wed"),
+    tr("task.cal.thu", "Thu"),
+    tr("task.cal.fri", "Fri"),
+    tr("task.cal.sat", "Sat"),
+    tr("task.cal.sun", "Sun"),
+  ];
 
   return (
     <div className="card-lux p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-display text-xl">{format(month, "MMMM yyyy")}</h3>
+        <h3 className="font-display text-xl">{format(month, "MMMM yyyy", { locale })}</h3>
         <div className="flex gap-1">
-          <Button variant="outline" size="icon" onClick={() => setMonth(addDays(startOfMonth(month), -1))} aria-label="Previous month">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setMonth(addDays(startOfMonth(month), -1))}
+            aria-label={tr("task.cal.prev", "Previous month")}
+          >
             <ChevronLeft className="size-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => setMonth(new Date())}>
-            Today
+            {tr("task.cal.today", "Today")}
           </Button>
-          <Button variant="outline" size="icon" onClick={() => setMonth(addDays(endOfMonth(month), 1))} aria-label="Next month">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setMonth(addDays(endOfMonth(month), 1))}
+            aria-label={tr("task.cal.next", "Next month")}
+          >
             <ChevronRight className="size-4" />
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border bg-border">
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+        {weekdays.map((d) => (
           <div key={d} className="bg-muted px-2 py-1.5 text-center text-xs font-medium text-muted-foreground">
             {d}
           </div>
@@ -315,7 +354,7 @@ export function TaskCalendar({
                 ))}
                 {dayTasks.length > 3 && (
                   <p className="px-1.5 text-[10px] text-muted-foreground">
-                    +{dayTasks.length - 3} more
+                    {tr("task.cal.more", "+{n} more", { n: dayTasks.length - 3 })}
                   </p>
                 )}
               </div>

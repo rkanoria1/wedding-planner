@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ScrollText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function GuestTimelinePage() {
+  const { t: tr } = useLang();
   const { events, timelineItems } = useWedding();
   const active = useMemo(
     () => events.filter((e) => !e.archived).sort((a, b) => a.sort_order - b.sort_order),
@@ -26,8 +28,12 @@ export default function GuestTimelinePage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Run of show</p>
-        <h1 className="font-display text-3xl">Ceremony Timeline</h1>
+        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+          {tr("guest.timeline.eyebrow", "Run of show")}
+        </p>
+        <h1 className="font-display text-3xl">
+          {tr("guest.timeline", "Ceremony Timeline")}
+        </h1>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
@@ -51,8 +57,8 @@ export default function GuestTimelinePage() {
       {items.length === 0 ? (
         <EmptyState
           icon={ScrollText}
-          title="Timeline coming soon"
-          hint="The family is still polishing the run of show."
+          title={tr("guest.timeline.empty.title", "Timeline coming soon")}
+          hint={tr("guest.timeline.empty.hint", "The family is still polishing the run of show.")}
         />
       ) : (
         <div className="relative space-y-0 pl-2">
@@ -71,7 +77,9 @@ export default function GuestTimelinePage() {
                   <p className="text-xs font-medium uppercase tracking-wider text-gold">{timeLabel}</p>
                   <p className="mt-1 font-display text-xl">{item.title}</p>
                   {item.people && (
-                    <p className="mt-1 text-sm text-muted-foreground">With {item.people}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {tr("guest.timeline.with", "With {people}", { people: item.people })}
+                    </p>
                   )}
                   {item.note && (
                     <p className="mt-2 text-sm leading-relaxed text-foreground/80">{item.note}</p>
