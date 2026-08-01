@@ -51,10 +51,11 @@ export async function GET(
   }
 
   // is this an invite we issued, and is it still active?
-  const { data: valid, error: rpcError } = await supabase.rpc("redeem_guest_invite", {
+  const { data, error: rpcError } = await supabase.rpc("redeem_guest_invite", {
     t: token,
   });
-  if (rpcError || valid !== true) return dest("/login?invite=invalid");
+  const row = Array.isArray(data) ? data[0] : data;
+  if (rpcError || !row?.ok) return dest("/login?invite=invalid");
 
   const guestPassword = process.env.GUEST_PORTAL_PASSWORD;
   if (!guestPassword) {
@@ -68,6 +69,14 @@ export async function GET(
     password: guestPassword,
   });
   if (error) return dest("/login?invite=invalid");
+
+  // remember which QR was scanned so /welcome can greet accordingly
+  // (a room card reads differently from an invitation card)
+  response.cookies.set("gi", token, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 400,
+  });
 
   return response;
 }

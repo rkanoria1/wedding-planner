@@ -7,6 +7,7 @@ import {
   LogOut, Music2, PhoneCall, Plus, QrCode, Settings, ShoppingBag, Store, Users,
 } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import { daysRemaining, taskListProgress } from "@/lib/wedding";
 import { EventIcon } from "@/components/shared/event-icon";
 import { GradientBar } from "@/components/shared/gradient-bar";
@@ -16,24 +17,25 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/tasks", label: "Tasks", icon: ListChecks },
-  { href: "/bookings", label: "Bookings", icon: CalendarCheck2 },
-  { href: "/shopping", label: "Shopping", icon: ShoppingBag },
-  { href: "/guests", label: "Guests", icon: Users },
-  { href: "/performances", label: "Sangeet", icon: Music2 },
-  { href: "/gallery", label: "Moments", icon: Images },
-  { href: "/vendors", label: "Vendors", icon: Store },
-  { href: "/contacts", label: "Contacts", icon: PhoneCall },
-  { href: "/invite", label: "Guest Invite", icon: QrCode },
-  { href: "/activity", label: "Activity", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Dashboard", k: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/tasks", label: "Tasks", k: "nav.tasks", icon: ListChecks },
+  { href: "/bookings", label: "Bookings", k: "nav.bookings", icon: CalendarCheck2 },
+  { href: "/shopping", label: "Shopping", k: "nav.shopping", icon: ShoppingBag },
+  { href: "/guests", label: "Guests", k: "nav.guests", icon: Users },
+  { href: "/performances", label: "Sangeet", k: "nav.sangeet", icon: Music2 },
+  { href: "/gallery", label: "Moments", k: "nav.moments", icon: Images },
+  { href: "/vendors", label: "Vendors", k: "nav.vendors", icon: Store },
+  { href: "/contacts", label: "Contacts", k: "nav.contacts", icon: PhoneCall },
+  { href: "/invite", label: "Guest Invite", k: "nav.invite", icon: QrCode },
+  { href: "/activity", label: "Activity", k: "nav.activity", icon: History },
+  { href: "/settings", label: "Settings", k: "nav.settings", icon: Settings },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { db, me, isAdmin, events, tasks, settings, branding } = useWedding();
+  const { t } = useLang();
 
   const activeEvents = events.filter((e) => !e.archived);
   const progress = taskListProgress(tasks);
@@ -59,7 +61,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div>
           <p className="font-display text-lg leading-tight">{branding.appTitle}</p>
           <p className="text-[11px] uppercase tracking-[0.2em] text-sidebar-foreground/60">
-            Planner
+            {t("nav.planner", "Planner")}
           </p>
         </div>
       </Link>
@@ -68,17 +70,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="mx-4 mb-3 rounded-xl bg-sidebar-accent px-4 py-3">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-2xl text-sidebar-primary">{days}</span>
-          <span className="text-xs text-sidebar-foreground/70">days to go</span>
+          <span className="text-xs text-sidebar-foreground/70">{t("countdown.daysToGo", "days to go")}</span>
         </div>
         <GradientBar value={progress} className="mt-2 h-1.5 bg-sidebar/60" />
         <p className="mt-1.5 text-[11px] text-sidebar-foreground/60">
-          {progress}% of planning complete
+          {progress}% {t("countdown.planningComplete", "of planning complete")}
         </p>
       </div>
 
       <ScrollArea className="flex-1 px-3">
         <nav className="space-y-0.5 pb-2">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {NAV.map(({ href, label, k, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -91,7 +93,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               )}
             >
               <Icon className="size-4.5" />
-              {label}
+              {t(k, label)}
             </Link>
           ))}
         </nav>
@@ -99,7 +101,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="mt-3 border-t border-sidebar-border pt-3 pb-4">
           <div className="mb-1 flex items-center justify-between px-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Celebrations
+              {t("nav.celebrations", "Celebrations")}
             </p>
             {isAdmin && (
               <Link

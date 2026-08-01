@@ -5,13 +5,14 @@ import { usePathname } from "next/navigation";
 import {
   CalendarCheck2, LayoutDashboard, ListChecks, Menu, ShoppingBag,
 } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/tasks", label: "Tasks", icon: ListChecks },
-  { href: "/bookings", label: "Bookings", icon: CalendarCheck2 },
-  { href: "/shopping", label: "Shopping", icon: ShoppingBag },
+  { href: "/", label: "Home", k: "nav.home", icon: LayoutDashboard },
+  { href: "/tasks", label: "Tasks", k: "nav.tasks", icon: ListChecks },
+  { href: "/bookings", label: "Bookings", k: "nav.bookings", icon: CalendarCheck2 },
+  { href: "/shopping", label: "Shopping", k: "nav.shopping", icon: ShoppingBag },
 ];
 
 /**
@@ -20,6 +21,7 @@ const TABS = [
  */
 export function MobileTabBar({ onMore }: { onMore: () => void }) {
   const pathname = usePathname();
+  const { t } = useLang();
 
   return (
     <nav
@@ -27,7 +29,7 @@ export function MobileTabBar({ onMore }: { onMore: () => void }) {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="mx-auto grid max-w-md grid-cols-5">
-        {TABS.map(({ href, label, icon: Icon }) => {
+        {TABS.map(({ href, label, k, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
@@ -46,7 +48,7 @@ export function MobileTabBar({ onMore }: { onMore: () => void }) {
               >
                 <Icon className="size-[22px]" />
               </span>
-              {label}
+              {t(k, label)}
             </Link>
           );
         })}
@@ -58,7 +60,7 @@ export function MobileTabBar({ onMore }: { onMore: () => void }) {
           <span className="flex h-8 w-14 items-center justify-center rounded-full">
             <Menu className="size-[22px]" />
           </span>
-          More
+          {t("nav.more", "More")}
         </button>
       </div>
     </nav>

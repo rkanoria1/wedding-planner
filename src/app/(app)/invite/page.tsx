@@ -18,7 +18,28 @@ interface Invite {
   active: boolean;
   uses: number;
   created_at: string;
+  variant?: "general" | "room" | "venue";
+  heading?: string | null;
+  message?: string | null;
 }
+
+const VARIANTS = [
+  {
+    id: "general" as const,
+    name: "Invitation card",
+    blurb: "For printed invites — a warm welcome and the four portal sections.",
+  },
+  {
+    id: "room" as const,
+    name: "Hotel room card",
+    blurb: "For guest rooms — adds the full run of functions, dates and venues.",
+  },
+  {
+    id: "venue" as const,
+    name: "Venue signage",
+    blurb: "For signs at the venue — quick access on the day.",
+  },
+];
 
 /** URL-safe random token — not a password, just an opaque handle. */
 function newToken() {
@@ -31,6 +52,9 @@ export default function InvitePage() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [selected, setSelected] = useState<Invite | null>(null);
   const [label, setLabel] = useState("");
+  const [variant, setVariant] = useState<"general" | "room" | "venue">("general");
+  const [heading, setHeading] = useState("");
+  const [message, setMessage] = useState("");
   const [origin, setOrigin] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,7 +62,7 @@ export default function InvitePage() {
   const load = useCallback(async () => {
     const { data } = await db
       .from("guest_invites")
-      .select("token,label,active,uses,created_at")
+      .select("token,label,active,uses,created_at,variant,heading,message")
       .order("created_at", { ascending: false });
     const rows = (data as Invite[]) ?? [];
     setInvites(rows);
@@ -69,14 +93,26 @@ export default function InvitePage() {
   async function create() {
     setBusy(true);
     const token = newToken();
-    const { error } = await db
-      .from("guest_invites")
-      .insert({ token, label: label.trim() || "Wedding invite" });
+    const defaults = {
+      general: { heading: "You're invited", message: "" },
+      room: { heading: "Welcome to your stay", message: "" },
+      venue: { heading: "Welcome", message: "" },
+    }[variant];
+    const row = {
+      token,
+      label: label.trim() || VARIANTS.find((v) => v.id === variant)!.name,
+      variant,
+      heading: heading.trim() || defaults.heading,
+      message: message.trim() || null,
+    };
+    const { error } = await db.from("guest_invites").insert(row);
     setBusy(false);
     if (error) return toast.error(error.message);
     setLabel("");
+    setHeading("");
+    setMessage("");
     await load();
-    setSelected({ token, label: label.trim() || "Wedding invite", active: true, uses: 0, created_at: new Date().toISOString() });
+    setSelected({ ...row, active: true, uses: 0, created_at: new Date().toISOString() });
     toast.success("New invite QR created");
   }
 
@@ -120,14 +156,59 @@ export default function InvitePage() {
           </span>
         </p>
 
-        <div className="relative mt-5 flex max-w-md gap-2">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="label">New invite label</Label>
+        {/* where will this QR live? */}
+        <div className="relative mt-6 space-y-2">
+          <Label>Where will this QR be placed?</Label>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {VARIANTS.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setVariant(v.id)}
+                className={cn(
+                  "rounded-xl border p-3 text-left transition-colors",
+                  variant === v.id
+                    ? "border-primary/50 bg-primary/8"
+                    : "hover:bg-accent"
+                )}
+              >
+                <p className="text-sm font-medium">{v.name}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{v.blurb}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative mt-4 grid max-w-2xl gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="heading">Greeting</Label>
+            <Input
+              id="heading"
+              value={heading}
+              onChange={(e) => setHeading(e.target.value)}
+              placeholder={
+                variant === "room" ? "Welcome to your stay" : "You're invited"
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="message">Sub-line (optional)</Label>
+            <Input
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={
+                variant === "room" ? "Taj City Centre · Rooms 200–240" : "Scan for details"
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="label">Internal label</Label>
             <Input
               id="label"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Printed cards, Venue signage"
+              placeholder="e.g. Hotel room cards"
             />
           </div>
           <Button className="mt-auto" onClick={create} disabled={busy}>
@@ -141,8 +222,11 @@ export default function InvitePage() {
       {selected && (
         <div className="card-lux mx-auto max-w-md p-8 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            You&apos;re invited
+            {selected.heading ?? "You're invited"}
           </p>
+          {selected.message && (
+            <p className="mt-1 text-sm text-muted-foreground">{selected.message}</p>
+          )}
           <h2 className="mt-2 font-display text-4xl text-gradient-gold">
             {branding.coupleNames}
           </h2>
@@ -163,7 +247,11 @@ export default function InvitePage() {
               </div>
             )}
           </div>
-          <p className="font-display text-lg">Scan for timeline, lookbook &amp; photos</p>
+          <p className="font-display text-lg">
+            {selected.variant === "room"
+              ? "Scan for your full schedule & venues"
+              : "Scan for timeline, lookbook & photos"}
+          </p>
         </div>
       )}
 

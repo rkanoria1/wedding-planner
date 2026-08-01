@@ -4,8 +4,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Camera, HeartHandshake, ScrollText } from "lucide-react";
 import { useWedding } from "@/lib/data-context";
-import { daysRemaining, formatDate } from "@/lib/wedding";
+import { EVENT_THEMES, daysRemaining, formatDate } from "@/lib/wedding";
 import { getGuestDisplayName } from "@/lib/guest";
+import { useInviteContext } from "@/lib/use-invite";
 
 const CARDS = [
   {
@@ -40,8 +41,15 @@ const CARDS = [
 
 export default function GuestHomePage() {
   const { settings, events } = useWedding();
+  const invite = useInviteContext();
   const days = daysRemaining(settings.wedding_date);
   const name = getGuestDisplayName();
+  // the full run of functions, in order — what someone reading a card in
+  // their hotel room actually wants to see
+  const schedule = [...events]
+    .filter((e) => !e.archived)
+    .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""));
+  const today = new Date().toISOString().slice(0, 10);
   const nextEvent = [...events]
     .filter((e) => !e.archived && e.event_date)
     .sort((a, b) => (a.event_date ?? "").localeCompare(b.event_date ?? ""))
@@ -56,8 +64,11 @@ export default function GuestHomePage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1210] via-[#3d2a24] to-[#7b1e3b] p-7 text-white"
       >
         <p className="text-xs uppercase tracking-[0.25em] text-white/60">
-          {name ? `Welcome, ${name}` : "Welcome"}
+          {invite?.heading ?? (name ? `Welcome, ${name}` : "Welcome")}
         </p>
+        {invite?.message && (
+          <p className="mt-1 text-sm text-amber-200/90">{invite.message}</p>
+        )}
         <h1 className="mt-2 font-display text-4xl leading-tight">
           {settings.couple_names}
         </h1>
@@ -76,6 +87,64 @@ export default function GuestHomePage() {
           </p>
         )}
       </motion.section>
+
+      {/* A code in a hotel room is read while planning the days ahead —
+          so show the whole sequence, not just what's next. */}
+      {invite?.variant === "room" && schedule.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.06 }}
+          className="rounded-2xl border bg-card p-5"
+        >
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            Your schedule
+          </p>
+          <ol className="mt-4 space-y-0">
+            {schedule.map((e, i) => {
+              const isToday = e.event_date === today;
+              const past = (e.event_date ?? "") < today;
+              return (
+                <li key={e.id} className="flex gap-3.5">
+                  {/* timeline rail */}
+                  <div className="flex flex-col items-center">
+                    <span
+                      className="mt-1.5 size-3 shrink-0 rounded-full ring-4 ring-background"
+                      style={{
+                        background:
+                          EVENT_THEMES[e.theme]?.chip ?? "var(--primary)",
+                        opacity: past ? 0.35 : 1,
+                      }}
+                    />
+                    {i < schedule.length - 1 && (
+                      <span className="w-px flex-1 bg-border" />
+                    )}
+                  </div>
+                  <div className={`pb-5 ${past ? "opacity-50" : ""}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-display text-lg leading-none">{e.name}</p>
+                      {isToday && (
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+                          Today
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatDate(e.event_date, "EEEE, d MMM")}
+                      {e.venue && ` · ${e.venue}`}
+                    </p>
+                    {e.description && (
+                      <p className="mt-1 text-sm text-muted-foreground/80">
+                        {e.description}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </motion.section>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((c, i) => (

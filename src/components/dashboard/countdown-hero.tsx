@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { differenceInSeconds, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { useWedding } from "@/lib/data-context";
+import { useLang } from "@/lib/i18n";
 import {
   daysRemaining, formatDate, planningElapsed, taskListProgress, weeksRemaining,
 } from "@/lib/wedding";
@@ -25,6 +26,11 @@ function useCountdown(target: string) {
   };
 }
 
+function greetingKey() {
+  const h = new Date().getHours();
+  return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+}
+
 function greeting() {
   const h = new Date().getHours();
   if (h < 5) return "Burning the midnight oil";
@@ -35,6 +41,7 @@ function greeting() {
 
 export function CountdownHero() {
   const { settings, tasks, branding } = useWedding();
+  const { t } = useLang();
   const cd = useCountdown(settings.wedding_date + "T00:00:00");
   const progress = taskListProgress(tasks);
   const elapsed = planningElapsed(settings.planning_start, settings.wedding_date);
@@ -64,7 +71,7 @@ export function CountdownHero() {
       <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">
-            {greeting()}, <span className="font-medium text-foreground">{firstName}</span> ✨
+            {t("greet." + greetingKey(), greeting())}, <span className="font-medium text-foreground">{firstName}</span> ✨
           </p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
             <span className="text-gradient-gold">{branding.coupleNames}</span>
